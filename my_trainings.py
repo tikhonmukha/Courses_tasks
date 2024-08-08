@@ -193,3 +193,47 @@ def article_views(views: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({'id':views.query('author_id==viewer_id')['author_id'].drop_duplicates().sort_values()})
 
 article_views(views)
+
+
+## leetcode 177. Nth Highest Salary
+
+import pandas as pd
+
+data = [[1, 100], [2, 100]]
+employee = pd.DataFrame(data, columns=['id', 'salary']).astype({'id':'Int64', 'salary':'Int64'})
+
+def nth_highest_salary(employee: pd.DataFrame, N: int) -> pd.DataFrame:
+    employee['rank'] = employee.salary.rank(method='dense', ascending=False)
+    salary = employee.query(f'rank=={N}').salary.drop_duplicates()
+    if len(salary)!=0:
+        return pd.DataFrame({f'getNthHighestSalary({N})':salary})
+    else:
+        return pd.DataFrame({f'getNthHighestSalary({N})':[None]})
+
+nth_highest_salary(employee, 4)
+
+
+# leetcode 184. Department Highest Salary
+
+data = [[1, 'Joe', 70000, 1], [2, 'Jim', 90000, 1], [3, 'Henry', 80000, 2], [4, 'Sam', 60000, 2], [5, 'Max', 90000, 1]]
+employee = pd.DataFrame(data, columns=['id', 'name', 'salary', 'departmentId']).astype({'id':'Int64', 'name':'object', 'salary':'Int64', 'departmentId':'Int64'})
+data = [[1, 'IT'], [2, 'Sales']]
+department = pd.DataFrame(data, columns=['id', 'name']).astype({'id':'Int64', 'name':'object'})
+
+def department_highest_salary(employee: pd.DataFrame, department: pd.DataFrame) -> pd.DataFrame:
+    emp_dep = employee.merge(department, left_on='departmentId', right_on='id')
+    emp_dep['rank'] = emp_dep.groupby('name_y', as_index=False)['salary'].rank(method='dense', ascending=False)
+    return emp_dep.query('rank==1')[['name_y','name_x','salary']].rename(columns={'name_y':'Department','name_x':'Employee','salary':'Salary'})
+
+department_highest_salary(employee, department)
+
+
+# leetcode 570. Managers with at Least 5 Direct Reports
+
+data = [[101, 'John', 'A', None], [102, 'Dan', 'A', 101], [103, 'James', 'A', 101], [104, 'Amy', 'A', 101], [105, 'Anne', 'A', 101], [106, 'Ron', 'B', 101]]
+employee = pd.DataFrame(data, columns=['id', 'name', 'department', 'managerId']).astype({'id':'Int64', 'name':'object', 'department':'object', 'managerId':'Int64'})
+def find_managers(employee: pd.DataFrame) -> pd.DataFrame:
+    emp_man = employee.merge(employee, left_on='id', right_on='managerId').groupby(['department_x', 'name_x'], as_index=False)['name_y'].nunique().rename(columns={'name_x':'name','name_y':'cnt'})
+    return pd.DataFrame({'name':emp_man.query('cnt>=5')['name']})
+
+find_managers(employee)
