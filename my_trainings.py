@@ -215,6 +215,8 @@ nth_highest_salary(employee, 4)
 
 # leetcode 184. Department Highest Salary
 
+import pandas as pd
+
 data = [[1, 'Joe', 70000, 1], [2, 'Jim', 90000, 1], [3, 'Henry', 80000, 2], [4, 'Sam', 60000, 2], [5, 'Max', 90000, 1]]
 employee = pd.DataFrame(data, columns=['id', 'name', 'salary', 'departmentId']).astype({'id':'Int64', 'name':'object', 'salary':'Int64', 'departmentId':'Int64'})
 data = [[1, 'IT'], [2, 'Sales']]
@@ -230,10 +232,32 @@ department_highest_salary(employee, department)
 
 # leetcode 570. Managers with at Least 5 Direct Reports
 
-data = [[101, 'John', 'A', None], [102, 'Dan', 'A', 101], [103, 'James', 'A', 101], [104, 'Amy', 'A', 101], [105, 'Anne', 'A', 101], [106, 'Ron', 'B', 101]]
+import pandas as pd
+
+data = [[101, 'John', 'A', None], [102, 'Dan', 'A', 101], [103, 'James', 'A', 101], [104, 'Amy', 'A', 101], [105, 'Anne', 'A', 101], [106, 'Ron', 'B', 101], [111, 'John', 'A', None], [112, 'Ron', 'A', 111], [113, 'Ron', 'A', 111], [114, 'Ron', 'A', 111], [115, 'Ron', 'A', 111], [116, 'Ron', 'B', 111]]
 employee = pd.DataFrame(data, columns=['id', 'name', 'department', 'managerId']).astype({'id':'Int64', 'name':'object', 'department':'object', 'managerId':'Int64'})
 def find_managers(employee: pd.DataFrame) -> pd.DataFrame:
-    emp_man = employee.merge(employee, left_on='id', right_on='managerId').groupby(['department_x', 'name_x'], as_index=False)['name_y'].nunique().rename(columns={'name_x':'name','name_y':'cnt'})
-    return pd.DataFrame({'name':emp_man.query('cnt>=5')['name']})
+    emp_man = employee.merge(employee, left_on='id', right_on='managerId').groupby(['id_x', 'name_x'], as_index=False)['id_y'].nunique().rename(columns={'name_x':'name','id_y':'cnt'})
+    if len(emp_man['id_x'])!=0:
+        return pd.DataFrame({'name':emp_man.query('cnt>=5')['name']})
+    else:
+        return pd.DataFrame({'name':[None]})
 
 find_managers(employee)
+
+
+## leetcode 602. Friend Requests II: Who Has the Most Friends
+
+import pandas as pd
+
+data = [[1, 2, '2016/06/03'], [1, 3, '2016/06/08'], [2, 3, '2016/06/08'], [3, 4, '2016/06/09']]
+request_accepted = pd.DataFrame(data, columns=['requester_id', 'accepter_id', 'accept_date']).astype({'requester_id':'Int64', 'accepter_id':'Int64', 'accept_date':'datetime64[ns]'})
+
+def most_friends(request_accepted: pd.DataFrame) -> pd.DataFrame:
+    requesters = request_accepted.groupby('requester_id', as_index=False).agg({'accept_date':'count'}).rename(columns={'requester_id':'id'})
+    accepters = request_accepted.groupby('accepter_id', as_index=False).agg({'accept_date':'count'}).rename(columns={'accepter_id':'id'})
+    req_and_acc = pd.concat([requesters, accepters]).groupby('id', as_index=False).agg({'accept_date':'sum'}).rename(columns={'accept_date':'num'})
+    req_and_acc['rank'] = req_and_acc['num'].rank(ascending=False)
+    return req_and_acc.query('rank==1')[['id','num']]
+
+most_friends(request_accepted)
