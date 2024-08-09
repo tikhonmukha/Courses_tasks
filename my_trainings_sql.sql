@@ -492,3 +492,70 @@ select user_id as buyer_id, join_date, count(distinct order_id) as orders_in_201
 from Users u left join Orders o on u.user_id=o.buyer_id
 and year(order_date)=2019
 group by user_id, join_date
+
+
+-- leetcode 1084. Sales Analysis III
+
+select distinct s.product_id, p.product_name
+from Sales s join Product p on s.product_id=p.product_id
+group by s.product_id, p.product_name
+having min(s.sale_date)>='2019-01-01' and max(sale_date)<='2019-03-31'
+
+
+-- leetcode 1141. User Activity for the Past 30 Days I
+
+select activity_date as day, count(distinct user_id) as active_users
+from Activity
+where activity_date between DATEADD(day,-29,'2019-07-27') and '2019-07-27'
+group by activity_date
+
+
+-- leetcode 1164. Product Price at a Given Date
+
+with product_max_date as (
+    select product_id, max(change_date) as max_change_date
+    from Products
+    where change_date<='2019-08-16'
+    group by product_id
+    union
+    select product_id, max(change_date) as max_change_date
+    from Products
+    group by product_id
+    having min(change_date)>'2019-08-16'
+)
+
+select p.product_id, 
+    case
+        when pmd.max_change_date<='2019-08-16' then p.new_price
+        when pmd.max_change_date>'2019-08-16' then 10
+    end as price
+from Products p join product_max_date pmd on p.product_id=pmd.product_id
+    and p.change_date=pmd.max_change_date
+
+
+-- leetcode 1174. Immediate Food Delivery II
+
+with order_ranks as (   
+    select
+        customer_id,
+        delivery_id,
+        case
+            when order_date=customer_pref_delivery_date then 'immediate'
+            when order_date!=customer_pref_delivery_date then 'scheduled'
+        end as order_type,
+        rank() over(partition by customer_id order by order_date) as order_date_rank
+    from Delivery
+),
+immediate_first_orders as (
+    select count(order_type) as immediate_orders_num
+    from order_ranks
+    where order_type='immediate' and order_date_rank=1
+),
+total_first_orders as (
+    select count(order_type) as total_orders_num
+    from order_ranks
+    where order_date_rank=1
+)
+
+select round(immediate_orders_num/cast(total_orders_num as float)*100,2) as immediate_percentage
+from immediate_first_orders, total_first_orders
