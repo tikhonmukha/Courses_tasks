@@ -261,3 +261,27 @@ def most_friends(request_accepted: pd.DataFrame) -> pd.DataFrame:
     return req_and_acc.query('rank==1')[['id','num']]
 
 most_friends(request_accepted)
+
+
+## leetcode 610. Triangle Judgement
+
+import pandas as pd
+import numpy as np
+
+data = [[13, 15, 30], [10, 20, 15]]
+triangle = pd.DataFrame(data, columns=['x', 'y', 'z']).astype({'x':'Int64', 'y':'Int64', 'z':'Int64'})
+
+def triangle_judgement(triangle: pd.DataFrame) -> pd.DataFrame:
+    triangle['triangle'] = np.where((triangle.x+triangle.y>triangle.z) & (triangle.z+triangle.y>triangle.x) & (triangle.x+triangle.z>triangle.y), 'Yes','No')
+    return triangle
+
+triangle_judgement(triangle)
+
+
+## leetcode 619. Biggest Single Number
+
+import pandas as pd
+
+data = [[8], [8], [3], [3], [1], [4], [5], [6]]
+my_numbers = pd.DataFrame(data, columns=['num']).astype({'num':'Int64'})
+my_numbers.groupby('num').aggregate({'num':'count'}).rename(columns={'num':'amt'}).query('amt==1').sort_index(ascending=False).head(1)
