@@ -285,3 +285,36 @@ import pandas as pd
 data = [[8], [8], [3], [3], [1], [4], [5], [6]]
 my_numbers = pd.DataFrame(data, columns=['num']).astype({'num':'Int64'})
 my_numbers.groupby('num').aggregate({'num':'count'}).rename(columns={'num':'amt'}).query('amt==1').sort_index(ascending=False).head(1)
+
+
+## leetcode 620. Not Boring Movies
+
+import pandas as pd
+
+data = [[1, 'War', 'great 3D', 8.9], [2, 'Science', 'fiction', 8.5], [3, 'irish', 'boring', 6.2], [4, 'Ice song', 'Fantacy', 8.6], [5, 'House card', 'Interesting', 9.1]]
+cinema = pd.DataFrame(data, columns=['id', 'movie', 'description', 'rating']).astype({'id':'Int64', 'movie':'object', 'description':'object', 'rating':'Float64'})
+
+def not_boring_movies(cinema: pd.DataFrame) -> pd.DataFrame:
+    return cinema.query('id%2!=0 & description!="boring"').sort_values(by='rating',ascending=False)
+
+not_boring_movies(cinema)
+
+
+## leetcode 626. Exchange Seats
+
+import pandas as pd
+import numpy as np
+
+data = [[1, 'Abbot'], [2, 'Doris'], [3, 'Emerson'], [4, 'Green'], [5, 'Jeames']]
+seat = pd.DataFrame(data, columns=['id', 'student']).astype({'id':'Int64', 'student':'object'})
+max_id=max(seat['id'])
+conditions=[
+    (seat['id']%2!=0) & (seat['id']!=max_id),
+    (seat['id']%2==0),
+    (seat['id']==max(seat['id']))
+]
+values=[seat['id']+1,seat['id']-1,seat['id']]
+seat['id']=np.select(conditions,values)
+
+seat.loc[seat['id']%2!=0 & seat['id']!=max_id, 'newid'] = seat['id']+1
+
