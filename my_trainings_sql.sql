@@ -559,3 +559,28 @@ total_first_orders as (
 
 select round(immediate_orders_num/cast(total_orders_num as float)*100,2) as immediate_percentage
 from immediate_first_orders, total_first_orders
+
+
+--leetcode 1179. Reformat Department Table
+
+select 
+	id, 
+	[Jan] as [Jan_Revenue], 
+	[Feb] as [Feb_Revenue], 
+	[Mar] as [Mar_Revenue], 
+	[Apr] as [Apr_Revenue], 
+	[May] as [May_Revenue], 
+	[Jun] as [Jun_Revenue], 
+	[Jul] as [Jul_Revenue], 
+	[Aug] as [Aug_Revenue], 
+	[Sep] as [Sep_Revenue], 
+	[Oct] as [Oct_Revenue], 
+	[Nov] as [Nov_Revenue], 
+	[Dec] as [Dec_Revenue]
+from (
+    select dep.id, dep.month, dep.revenue
+    from dbo.Department dep
+) as src
+pivot (
+    sum(src.revenue) for src.month in ([Jan], [Feb], [Mar], [Apr], [May], [Jun], [Jul], [Aug], [Sep], [Oct], [Nov], [Dec])
+) as pvt
