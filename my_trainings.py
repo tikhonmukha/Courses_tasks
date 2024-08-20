@@ -318,3 +318,67 @@ seat['id']=np.select(conditions,values)
 
 seat.loc[seat['id']%2!=0 & seat['id']!=max_id, 'newid'] = seat['id']+1
 
+
+# leetcode 1045. Customers Who Bought All Products
+
+import pandas as pd
+
+data = [[1, 5], [2, 6], [3, 5], [3, 6], [1, 6]]
+customer = pd.DataFrame(data, columns=['customer_id', 'product_key']).astype({'customer_id':'Int64', 'product_key':'Int64'})
+data = [[5], [6]]
+product = pd.DataFrame(data, columns=['product_key']).astype({'product_key':'Int64'})
+
+def find_customers(customer: pd.DataFrame, product: pd.DataFrame) -> pd.DataFrame:
+    unique_products = product.product_key.nunique()
+    cust = customer.groupby('customer_id', as_index=False).aggregate({'product_key':'nunique'}).query('product_key==@unique_products').customer_id
+    return pd.DataFrame({'customer_id':cust})
+
+find_customers(customer, product)
+
+
+# leetcode 1050. Actors and Directors Who Cooperated At Least Three Times
+
+import pandas as pd
+
+data = [[1, 1, 0], [1, 1, 1], [1, 1, 2], [1, 2, 3], [1, 2, 4], [2, 1, 5], [2, 1, 6]]
+actor_director = pd.DataFrame(data, columns=['actor_id', 'director_id', 'timestamp']).astype({'actor_id':'int64', 'director_id':'int64', 'timestamp':'int64'})
+
+def actors_and_directors(actor_director: pd.DataFrame) -> pd.DataFrame:
+    return actor_director.groupby(['actor_id','director_id'], as_index=False)\
+        .aggregate({'timestamp':'nunique'})\
+            .query('timestamp>=3')[['actor_id','director_id']]
+
+actors_and_directors(actor_director)
+
+
+# leetcode 1068. Product Sales Analysis I
+
+import pandas as pd
+
+data = [[1, 100, 2008, 10, 5000], [2, 100, 2009, 12, 5000], [7, 200, 2011, 15, 9000]]
+sales = pd.DataFrame(data, columns=['sale_id', 'product_id', 'year', 'quantity', 'price']).astype({'sale_id':'Int64', 'product_id':'Int64', 'year':'Int64', 'quantity':'Int64', 'price':'Int64'})
+data = [[100, 'Nokia'], [200, 'Apple'], [300, 'Samsung']]
+product = pd.DataFrame(data, columns=['product_id', 'product_name']).astype({'product_id':'Int64', 'product_name':'object'})
+
+def sales_analysis(sales: pd.DataFrame, product: pd.DataFrame) -> pd.DataFrame:
+    return sales.merge(product, how='inner', on='product_id')[['product_name','year','price']]
+
+sales_analysis(sales,product)
+
+
+# leetcode 1070. Product Sales Analysis III
+
+import pandas as pd
+
+data = [[1, 100, 2008, 10, 5000], [2, 100, 2009, 12, 5000], [7, 200, 2011, 15, 9000]]
+sales = pd.DataFrame(data, columns=['sale_id', 'product_id', 'year', 'quantity', 'price']).astype({'sale_id':'Int64', 'product_id':'Int64', 'year':'Int64', 'quantity':'Int64', 'price':'Int64'})
+data = [[100, 'Nokia'], [200, 'Apple'], [300, 'Samsung']]
+product = pd.DataFrame(data, columns=['product_id', 'product_name']).astype({'product_id':'Int64', 'product_name':'object'})
+
+def sales_analysis(sales: pd.DataFrame, product: pd.DataFrame) -> pd.DataFrame:
+    return sales.merge(product, how='inner', on='product_id')[['product_id','year','quantity','price']]\
+        .groupby('product_id',as_index=False)\
+            .min('year')\
+                .rename(columns={'year':'first_year'})
+
+sales_analysis(sales,product)
