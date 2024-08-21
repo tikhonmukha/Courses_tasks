@@ -584,3 +584,71 @@ from (
 pivot (
     sum(src.revenue) for src.month in ([Jan], [Feb], [Mar], [Apr], [May], [Jun], [Jul], [Aug], [Sep], [Oct], [Nov], [Dec])
 ) as pvt
+
+
+--leetcode 1193. Monthly Transactions I
+
+create test_db
+go
+use test_db
+go
+Create table dbo.Transactions (id int, country varchar(4), state nvarchar(20), amount int, trans_date date)
+go
+insert into dbo.Transactions (id, country, state, amount, trans_date) values ('121', 'US', 'approved', '1000', '2018-12-18')
+insert into dbo.Transactions (id, country, state, amount, trans_date) values ('122', 'US', 'declined', '2000', '2018-12-19')
+insert into dbo.Transactions (id, country, state, amount, trans_date) values ('123', 'US', 'approved', '2000', '2019-01-01')
+insert into dbo.Transactions (id, country, state, amount, trans_date) values ('124', 'DE', 'approved', '2000', '2019-01-07')
+insert into dbo.Transactions (id, country, state, amount, trans_date) values ('125', NULL, 'approved', '2000', '2019-01-07')
+go
+
+use test_db
+go
+with all_trans as (
+	select concat(format(trans_date, 'yyyy-MM'),'-',country) as tbl_id, format(trans_date, 'yyyy-MM') as [month], country, count(id) as trans_count, sum(amount) as trans_total_amount
+	from dbo.Transactions
+	group by format(trans_date, 'yyyy-MM'), country
+),
+approved_trans as (
+	select concat(format(trans_date, 'yyyy-MM'),'-',country) as tbl_id, format(trans_date, 'yyyy-MM') as [month], country, count(id) as trans_count, sum(amount) as trans_total_amount
+	from dbo.Transactions
+	where [state]='approved'
+	group by format(trans_date, 'yyyy-MM'), country
+)
+select [all].[month], [all].country, [all].trans_count, coalesce(app.trans_count,0) as approved_count, [all].trans_total_amount, coalesce(app.trans_total_amount,0) as approved_total_amount
+from all_trans as [all] left join approved_trans as app on [all].tbl_id=app.tbl_id
+
+use test_db
+go
+truncate table dbo.Transactions
+
+
+--leetcode 1204. Last Person to Fit in the Bus
+
+create test_db
+go
+use test_db
+go
+Create table dbo.Queue (person_id int, person_name varchar(30), weight int, turn int)
+go
+insert into Queue (person_id, person_name, weight, turn) values ('5', 'Alice', '250', '1')
+insert into Queue (person_id, person_name, weight, turn) values ('4', 'Bob', '175', '5')
+insert into Queue (person_id, person_name, weight, turn) values ('3', 'Alex', '350', '2')
+insert into Queue (person_id, person_name, weight, turn) values ('6', 'John Cena', '400', '3')
+insert into Queue (person_id, person_name, weight, turn) values ('1', 'Winston', '500', '6')
+insert into Queue (person_id, person_name, weight, turn) values ('2', 'Marie', '200', '4')
+go
+
+use test_db
+go
+with person_running_weight as (
+	select *, sum(weight) over(order by turn rows unbounded preceding) as running_weight
+	from dbo.Queue
+)
+select top 1 person_name
+from person_running_weight
+where running_weight<=1000
+order by turn desc
+
+use test_db
+go
+truncate table dbo.Queue
