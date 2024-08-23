@@ -319,7 +319,7 @@ seat['id']=np.select(conditions,values)
 seat.loc[seat['id']%2!=0 & seat['id']!=max_id, 'newid'] = seat['id']+1
 
 
-# leetcode 1045. Customers Who Bought All Products
+## leetcode 1045. Customers Who Bought All Products
 
 import pandas as pd
 
@@ -336,7 +336,7 @@ def find_customers(customer: pd.DataFrame, product: pd.DataFrame) -> pd.DataFram
 find_customers(customer, product)
 
 
-# leetcode 1050. Actors and Directors Who Cooperated At Least Three Times
+## leetcode 1050. Actors and Directors Who Cooperated At Least Three Times
 
 import pandas as pd
 
@@ -351,7 +351,7 @@ def actors_and_directors(actor_director: pd.DataFrame) -> pd.DataFrame:
 actors_and_directors(actor_director)
 
 
-# leetcode 1068. Product Sales Analysis I
+## leetcode 1068. Product Sales Analysis I
 
 import pandas as pd
 
@@ -366,7 +366,7 @@ def sales_analysis(sales: pd.DataFrame, product: pd.DataFrame) -> pd.DataFrame:
 sales_analysis(sales,product)
 
 
-# leetcode 1070. Product Sales Analysis III
+## leetcode 1070. Product Sales Analysis III
 
 import pandas as pd
 
@@ -382,3 +382,66 @@ def sales_analysis(sales: pd.DataFrame, product: pd.DataFrame) -> pd.DataFrame:
                 .rename(columns={'year':'first_year'})
 
 sales_analysis(sales,product)
+
+
+## leetcode 1075. Project Employees I
+
+import pandas as pd
+
+data = [[1, 1], [1, 2], [1, 3], [2, 1], [2, 4]]
+project = pd.DataFrame(data, columns=['project_id', 'employee_id']).astype({'project_id':'Int64', 'employee_id':'Int64'})
+data = [[1, 'Khaled', 3], [2, 'Ali', 2], [3, 'John', 1], [4, 'Doe', 2]]
+employee = pd.DataFrame(data, columns=['employee_id', 'name', 'experience_years']).astype({'employee_id':'Int64', 'name':'object', 'experience_years':'Int64'})
+
+def project_employees_i(project: pd.DataFrame, employee: pd.DataFrame) -> pd.DataFrame:
+    return project.merge(employee, how='left', on='employee_id')\
+        .groupby('project_id', as_index=False)\
+            .aggregate({'experience_years':'mean'})\
+                .round({'experience_years':2})\
+                    .rename(columns={'experience_years':'average_years'})
+
+project_employees_i(project, employee)
+
+
+## leetcode 1084. Sales Analysis III
+
+import pandas as pd
+
+data = [[1, 'S8', 1000], [2, 'G4', 800], [3, 'iPhone', 1400]]
+product = pd.DataFrame(data, columns=['product_id', 'product_name', 'unit_price']).astype({'product_id':'Int64', 'product_name':'object', 'unit_price':'Int64'})
+data = [[1, 1, 1, '2019-01-21', 2, 2000], [1, 2, 2, '2019-02-17', 1, 800], [2, 2, 3, '2019-06-02', 1, 800], [3, 3, 4, '2019-05-13', 2, 2800]]
+sales = pd.DataFrame(data, columns=['seller_id', 'product_id', 'buyer_id', 'sale_date', 'quantity', 'price']).astype({'seller_id':'Int64', 'product_id':'Int64', 'buyer_id':'Int64', 'sale_date':'datetime64[ns]', 'quantity':'Int64', 'price':'Int64'})
+
+def sales_analysis(product: pd.DataFrame, sales: pd.DataFrame) -> pd.DataFrame:
+    return sales.merge(product, how='inner', on='product_id')\
+        .groupby(['product_id','product_name'], as_index=False).sale_date\
+            .agg(minDate='min',maxDate='max').query('minDate>="2019-01-01" & maxDate<="2019-03-31"')[['product_id','product_name']]
+
+sales_analysis(product, sales)
+
+
+## leetcode 1141. User Activity for the Past 30 Days I
+
+import pandas as pd
+
+data = [[1, 1, '2019-07-20', 'open_session'], [1, 1, '2019-07-20', 'scroll_down'], [1, 1, '2019-07-20', 'end_session'], [2, 4, '2019-07-20', 'open_session'], [2, 4, '2019-07-21', 'send_message'], [2, 4, '2019-07-21', 'end_session'], [3, 2, '2019-07-21', 'open_session'], [3, 2, '2019-07-21', 'send_message'], [3, 2, '2019-07-21', 'end_session'], [4, 3, '2019-06-25', 'open_session'], [4, 3, '2019-06-25', 'end_session']]
+activity = pd.DataFrame(data, columns=['user_id', 'session_id', 'activity_date', 'activity_type']).astype({'user_id':'Int64', 'session_id':'Int64', 'activity_date':'datetime64[ns]', 'activity_type':'object'})
+
+def user_activity(activity: pd.DataFrame) -> pd.DataFrame:
+    return activity.query('activity_date>="2019-06-28" & activity_date<="2019-07-27"')\
+        .groupby('activity_date', as_index=False).user_id.agg(active_users='nunique').rename(columns={'activity_date':'day'})
+
+user_activity(activity)
+
+
+## leetcode 1148. Article Views I
+
+import pandas as pd
+
+data = [[1, 3, 5, '2019-08-01'], [1, 3, 6, '2019-08-02'], [2, 7, 7, '2019-08-01'], [2, 7, 6, '2019-08-02'], [4, 7, 1, '2019-07-22'], [3, 4, 4, '2019-07-21'], [3, 4, 4, '2019-07-21']]
+views = pd.DataFrame(data, columns=['article_id', 'author_id', 'viewer_id', 'view_date']).astype({'article_id':'Int64', 'author_id':'Int64', 'viewer_id':'Int64', 'view_date':'datetime64[ns]'})
+
+def article_views(views: pd.DataFrame) -> pd.DataFrame:
+    return pd.DataFrame({'id':views.query('author_id==viewer_id').sort_values(by='author_id').author_id.unique()})
+
+article_views(views)
