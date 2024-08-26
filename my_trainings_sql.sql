@@ -619,7 +619,7 @@ from all_trans as [all] left join approved_trans as app on [all].tbl_id=app.tbl_
 
 use test_db
 go
-truncate table dbo.Transactions
+drop table dbo.Transactions
 
 
 --leetcode 1204. Last Person to Fit in the Bus
@@ -651,4 +651,143 @@ order by turn desc
 
 use test_db
 go
-truncate table dbo.Queue
+drop table dbo.Queue
+
+
+--leetcode 1211. Queries Quality and Percentage
+
+use test_db
+go
+Create table Queries (query_name varchar(30), result varchar(50), position int, rating int)
+go
+insert into Queries (query_name, result, position, rating) values ('Dog', 'Golden Retriever', '1', '5')
+insert into Queries (query_name, result, position, rating) values ('Dog', 'German Shepherd', '2', '5')
+insert into Queries (query_name, result, position, rating) values ('Dog', 'Mule', '200', '1')
+insert into Queries (query_name, result, position, rating) values ('Cat', 'Shirazi', '5', '2')
+insert into Queries (query_name, result, position, rating) values ('Cat', 'Siamese', '3', '3')
+insert into Queries (query_name, result, position, rating) values (null, 'Sphynx', '7', '4')
+go
+
+use test_db
+go
+select 
+	query_name, 
+	round(sum(cast(rating as float)/position)/count(*),2) as quality,
+	round(cast(sum(case when rating<3 then 1 else 0 end) as float)/count(*)*100,2) as poor_query_percentage
+from dbo.Queries
+where query_name is not null
+group by query_name
+
+use test_db
+go
+drop table dbo.Queries
+
+
+--leetcode 1251. Average Selling Price
+
+use test_db
+go
+Create table Prices (product_id int, start_date date, end_date date, price int)
+Create table UnitsSold (product_id int, purchase_date date, units int)
+go
+insert into Prices (product_id, start_date, end_date, price) values ('1', '2019-02-17', '2019-02-28', '5')
+insert into Prices (product_id, start_date, end_date, price) values ('1', '2019-03-01', '2019-03-22', '20')
+insert into Prices (product_id, start_date, end_date, price) values ('2', '2019-02-01', '2019-02-20', '15')
+insert into Prices (product_id, start_date, end_date, price) values ('2', '2019-02-21', '2019-03-31', '30')
+insert into Prices (product_id, start_date, end_date, price) values ('3', '2019-02-21', '2019-03-31', '30')
+insert into UnitsSold (product_id, purchase_date, units) values ('1', '2019-02-25', '100')
+insert into UnitsSold (product_id, purchase_date, units) values ('1', '2019-03-01', '15')
+insert into UnitsSold (product_id, purchase_date, units) values ('2', '2019-02-10', '200')
+insert into UnitsSold (product_id, purchase_date, units) values ('2', '2019-03-22', '30')
+go
+
+use test_db
+go
+select 
+	p.product_id, 
+	round(coalesce(sum(p.price*u.units)/sum(cast(u.units as float)),0),2) as average_price
+from dbo.Prices p 
+	left join UnitsSold u on p.product_id=u.product_id and u.purchase_date>=p.start_date and u.purchase_date<=p.end_date
+group by p.product_id
+
+use test_db
+go
+drop table dbo.Prices, dbo.UnitsSold
+
+
+--leetcode 1280. Students and Examinations
+
+use test_db
+go
+Create table Students (student_id int, student_name varchar(20))
+Create table Subjects (subject_name varchar(20))
+Create table Examinations (student_id int, subject_name varchar(20))
+go
+insert into Students (student_id, student_name) values ('1', 'Alice')
+insert into Students (student_id, student_name) values ('2', 'Bob')
+insert into Students (student_id, student_name) values ('13', 'John')
+insert into Students (student_id, student_name) values ('6', 'Alex')
+insert into Subjects (subject_name) values ('Math')
+insert into Subjects (subject_name) values ('Physics')
+insert into Subjects (subject_name) values ('Programming')
+insert into Examinations (student_id, subject_name) values ('1', 'Math')
+insert into Examinations (student_id, subject_name) values ('1', 'Physics')
+insert into Examinations (student_id, subject_name) values ('1', 'Programming')
+insert into Examinations (student_id, subject_name) values ('2', 'Programming')
+insert into Examinations (student_id, subject_name) values ('1', 'Physics')
+insert into Examinations (student_id, subject_name) values ('1', 'Math')
+insert into Examinations (student_id, subject_name) values ('13', 'Math')
+insert into Examinations (student_id, subject_name) values ('13', 'Programming')
+insert into Examinations (student_id, subject_name) values ('13', 'Physics')
+insert into Examinations (student_id, subject_name) values ('2', 'Math')
+insert into Examinations (student_id, subject_name) values ('1', 'Math')
+
+use test_db
+go
+select 
+	st.student_id, 
+	st.student_name, 
+	sub.subject_name, 
+	count(ex.subject_name) as attended_exams
+from dbo.Students st 
+	cross join dbo.Subjects sub 
+	left join dbo.Examinations ex on st.student_id=ex.student_id and sub.subject_name=ex.subject_name
+group by st.student_id, st.student_name, sub.subject_name
+order by st.student_id, sub.subject_name
+
+use test_db
+go
+drop table dbo.Students, dbo.Subjects, dbo.Examinations
+
+
+--leetcode 1321. Restaurant Growth
+
+use test_db
+go
+Create table Customer (customer_id int, name varchar(20), visited_on date, amount int)
+go
+insert into Customer (customer_id, name, visited_on, amount) values ('1', 'Jhon', '2019-01-01', '100')
+insert into Customer (customer_id, name, visited_on, amount) values ('2', 'Daniel', '2019-01-02', '110')
+insert into Customer (customer_id, name, visited_on, amount) values ('3', 'Jade', '2019-01-03', '120')
+insert into Customer (customer_id, name, visited_on, amount) values ('4', 'Khaled', '2019-01-04', '130')
+insert into Customer (customer_id, name, visited_on, amount) values ('5', 'Winston', '2019-01-05', '110')
+insert into Customer (customer_id, name, visited_on, amount) values ('6', 'Elvis', '2019-01-06', '140')
+insert into Customer (customer_id, name, visited_on, amount) values ('7', 'Anna', '2019-01-07', '150')
+insert into Customer (customer_id, name, visited_on, amount) values ('8', 'Maria', '2019-01-08', '80')
+insert into Customer (customer_id, name, visited_on, amount) values ('9', 'Jaze', '2019-01-09', '110')
+insert into Customer (customer_id, name, visited_on, amount) values ('1', 'Jhon', '2019-01-10', '130')
+insert into Customer (customer_id, name, visited_on, amount) values ('3', 'Jade', '2019-01-10', '150')
+go
+
+use test_db
+go
+with daily_amount as (
+	select visited_on, sum(amount) as amount
+	from dbo.Customer
+	group by visited_on
+)
+select 
+	visited_on, 
+	sum(amount) over(order by visited_on rows between 6 preceding and current row), 
+	sum(amount) over(order by visited_on rows between 6 preceding and current row) / lag(amount, 6) over(order by visited_on)
+from daily_amount
