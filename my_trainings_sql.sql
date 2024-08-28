@@ -785,9 +785,107 @@ with daily_amount as (
 	select visited_on, sum(amount) as amount
 	from dbo.Customer
 	group by visited_on
+),
+rolling_values as (
+	select 
+		visited_on, 
+		sum(amount) over(order by visited_on rows between 6 preceding and current row) as amount, 
+		case
+			when datediff(day,(select min(visited_on) from daily_amount),visited_on)>=6
+			then round(avg(cast(amount as float)) over(order by visited_on rows between 6 preceding and current row),2)
+			else null
+		end as average_amount
+	from daily_amount
 )
-select 
-	visited_on, 
-	sum(amount) over(order by visited_on rows between 6 preceding and current row), 
-	sum(amount) over(order by visited_on rows between 6 preceding and current row) / lag(amount, 6) over(order by visited_on)
-from daily_amount
+select *
+from rolling_values
+where average_amount is not null
+order by visited_on
+
+
+--leetcode 1327. List the Products Ordered in a Period
+
+use test_db
+go
+Create table Products (product_id int, product_name varchar(40), product_category varchar(40))
+Create table Orders (product_id int, order_date date, unit int)
+go
+insert into Products (product_id, product_name, product_category) values ('1', 'Leetcode Solutions', 'Book')
+insert into Products (product_id, product_name, product_category) values ('2', 'Jewels of Stringology', 'Book')
+insert into Products (product_id, product_name, product_category) values ('3', 'HP', 'Laptop')
+insert into Products (product_id, product_name, product_category) values ('4', 'Lenovo', 'Laptop')
+insert into Products (product_id, product_name, product_category) values ('5', 'Leetcode Kit', 'T-shirt')
+insert into Orders (product_id, order_date, unit) values ('1', '2020-02-05', '60')
+insert into Orders (product_id, order_date, unit) values ('1', '2020-02-10', '70')
+insert into Orders (product_id, order_date, unit) values ('2', '2020-01-18', '30')
+insert into Orders (product_id, order_date, unit) values ('2', '2020-02-11', '80')
+insert into Orders (product_id, order_date, unit) values ('3', '2020-02-17', '2')
+insert into Orders (product_id, order_date, unit) values ('3', '2020-02-24', '3')
+insert into Orders (product_id, order_date, unit) values ('4', '2020-03-01', '20')
+insert into Orders (product_id, order_date, unit) values ('4', '2020-03-04', '30')
+insert into Orders (product_id, order_date, unit) values ('4', '2020-03-04', '60')
+insert into Orders (product_id, order_date, unit) values ('5', '2020-02-25', '50')
+insert into Orders (product_id, order_date, unit) values ('5', '2020-02-27', '50')
+insert into Orders (product_id, order_date, unit) values ('5', '2020-03-01', '50')
+go
+
+use test_db
+go
+select p.product_name, sum(unit) as unit
+from dbo.Products p left join dbo.Orders o on p.product_id=o.product_id
+where format(o.order_date, 'yyyyMM')='202002'
+group by p.product_name
+having sum(unit)>=100
+
+
+--leetcode 1341. Movie Rating
+
+use test_db
+go
+Create table Movies (movie_id int, title varchar(30))
+Create table Users (user_id int, name varchar(30))
+Create table MovieRating (movie_id int, user_id int, rating int, created_at date)
+go
+insert into Movies (movie_id, title) values ('1', 'Avengers')
+insert into Movies (movie_id, title) values ('2', 'Frozen 2')
+insert into Movies (movie_id, title) values ('3', 'Joker')
+insert into Users (user_id, name) values ('1', 'Daniel')
+insert into Users (user_id, name) values ('2', 'Monica')
+insert into Users (user_id, name) values ('3', 'Maria')
+insert into Users (user_id, name) values ('4', 'James')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('1', '1', '3', '2020-01-12')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('1', '2', '4', '2020-02-11')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('1', '3', '2', '2020-02-12')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('1', '4', '1', '2020-01-01')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('2', '1', '5', '2020-02-17')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('2', '2', '2', '2020-02-01')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('2', '3', '2', '2020-03-01')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('3', '1', '3', '2020-02-22')
+insert into MovieRating (movie_id, user_id, rating, created_at) values ('3', '2', '4', '2020-02-25')
+
+use test_db
+go
+with ratings as (
+select m.title, u.name, mv.rating, mv.created_at
+from dbo.MovieRating mv 
+	join dbo.Movies m on mv.movie_id=m.movie_id 
+	join dbo.Users u on mv.user_id=u.user_id
+),
+top_user as (
+	select top 1 name as results
+	from ratings
+	group by name
+	order by count(*) desc, name asc
+),
+top_movie as (
+	select top 1 title as results
+	from ratings
+	where format(created_at, 'yyyyMM')='202002'
+	group by title
+	order by avg(cast(rating as float)) desc, title asc
+)
+select *
+from top_user
+union all
+select *
+from top_movie
