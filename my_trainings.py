@@ -473,5 +473,25 @@ import pandas as pd
 
 data = [[1, 20, '2019-08-14'], [2, 50, '2019-08-14'], [1, 30, '2019-08-15'], [1, 35, '2019-08-16'], [2, 65, '2019-08-17'], [3, 20, '2019-08-18']]
 products = pd.DataFrame(data, columns=['product_id', 'new_price', 'change_date']).astype({'product_id':'Int64', 'new_price':'Int64', 'change_date':'datetime64[ns]'})
-products.change_date<='2019-08-16'
-products['price'] = list(map(lambda x: products.new_price if x<='2019-08-16' else 10, products.change_date))
+
+def price_at_given_date(products: pd.DataFrame) -> pd.DataFrame:
+    products_before_date = products.query('change_date<="2019-08-16"').groupby('product_id', as_index=False).agg({'change_date':'max'})
+    products_after_date = products.groupby('product_id', as_index=False).agg({'change_date':'min'}).query('change_date>"2019-08-16"')
+    products_first_sold = pd.concat([products_before_date,products_after_date])
+    products_first_sold = products_first_sold.merge(products, how='inner', on=['product_id','change_date'])
+    products_first_sold['true_date'] = products_first_sold.change_date<='2019-08-16'
+    products_first_sold['price'] = [products_first_sold['new_price'][i] if products_first_sold['true_date'][i]==True else 10 for i in range(0, len(products_first_sold['true_date']))]
+    return products_first_sold[['product_id','price']]
+
+price_at_given_date(products)
+
+
+## leetcode 1174. Immediate Food Delivery II
+
+import pandas as pd
+
+data = [[1, 1, '2019-08-01', '2019-08-02'], [2, 2, '2019-08-02', '2019-08-02'], [3, 1, '2019-08-11', '2019-08-12'], [4, 3, '2019-08-24', '2019-08-24'], [5, 3, '2019-08-21', '2019-08-22'], [6, 2, '2019-08-11', '2019-08-13'], [7, 4, '2019-08-09', '2019-08-09']]
+delivery = pd.DataFrame(data, columns=['delivery_id', 'customer_id', 'order_date', 'customer_pref_delivery_date']).astype({'delivery_id':'Int64', 'customer_id':'Int64', 'order_date':'datetime64[ns]', 'customer_pref_delivery_date':'datetime64[ns]'})
+
+delivery['order_type'] = ['immediate' if delivery['order_date'][i]==delivery['customer_pref_delivery_date'][i] else 'scheduled' for i in range(0, len(delivery['order_date']))]
+delivery['order_rank'] = delivery[['customer_id','delivery_id']].apply(tuple,axis=1).rank(method='dense').astype(int)
