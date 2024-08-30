@@ -889,3 +889,144 @@ from top_user
 union all
 select *
 from top_movie
+
+
+--leetcode 1378. Replace Employee ID With The Unique Identifier
+
+use test_db
+go
+Create table Employees (id int, name varchar(20))
+Create table EmployeeUNI (id int, unique_id int)
+go
+insert into Employees (id, name) values ('1', 'Alice')
+insert into Employees (id, name) values ('7', 'Bob')
+insert into Employees (id, name) values ('11', 'Meir')
+insert into Employees (id, name) values ('90', 'Winston')
+insert into Employees (id, name) values ('3', 'Jonathan')
+insert into EmployeeUNI (id, unique_id) values ('3', '1')
+insert into EmployeeUNI (id, unique_id) values ('11', '2')
+insert into EmployeeUNI (id, unique_id) values ('90', '3')
+go
+
+use test_db
+go
+select eu.unique_id, e.name
+from Employees e left join EmployeeUNI eu on e.id=eu.id
+
+
+--leetcode 1393. Capital Gain/Loss
+
+use test_db
+go
+Create Table Stocks (stock_name varchar(15), operation nchar(4), operation_day int, price int)
+go
+insert into Stocks (stock_name, operation, operation_day, price) values ('Leetcode', 'Buy', '1', '1000')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Corona Masks', 'Buy', '2', '10')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Leetcode', 'Sell', '5', '9000')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Handbags', 'Buy', '17', '30000')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Corona Masks', 'Sell', '3', '1010')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Corona Masks', 'Buy', '4', '1000')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Corona Masks', 'Sell', '5', '500')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Corona Masks', 'Buy', '6', '1000')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Handbags', 'Sell', '29', '7000')
+insert into Stocks (stock_name, operation, operation_day, price) values ('Corona Masks', 'Sell', '10', '10000')
+go
+
+use test_db
+go
+with stock as (
+	select stock_name, operation, operation_day,
+		case
+			when operation='Buy' then price*(-1)
+			else price
+		end as price
+	from Stocks
+)
+select stock_name, sum(price) as capital_gain_loss
+from stock
+group by stock_name
+
+
+--leetcode 1407. Top Travellers
+
+use test_db
+go
+Create Table Users (id int, name varchar(30))
+Create Table Rides (id int, user_id int, distance int)
+go
+insert into Users (id, name) values ('1', 'Alice')
+insert into Users (id, name) values ('2', 'Bob')
+insert into Users (id, name) values ('3', 'Alex')
+insert into Users (id, name) values ('4', 'Donald')
+insert into Users (id, name) values ('7', 'Lee')
+insert into Users (id, name) values ('13', 'Jonathan')
+insert into Users (id, name) values ('19', 'Elvis')
+insert into Rides (id, user_id, distance) values ('1', '1', '120')
+insert into Rides (id, user_id, distance) values ('2', '2', '317')
+insert into Rides (id, user_id, distance) values ('3', '3', '222')
+insert into Rides (id, user_id, distance) values ('4', '7', '100')
+insert into Rides (id, user_id, distance) values ('5', '13', '312')
+insert into Rides (id, user_id, distance) values ('6', '19', '50')
+insert into Rides (id, user_id, distance) values ('7', '7', '120')
+insert into Rides (id, user_id, distance) values ('8', '19', '400')
+insert into Rides (id, user_id, distance) values ('9', '7', '230')
+go
+
+use test_db
+go
+select u.[name], coalesce(sum(r.distance),0) as travelled_distance
+from Users u left join Rides r on u.id=r.[user_id]
+group by u.id, u.[name]
+order by travelled_distance desc, u.[name]
+
+
+--leetcode 1484. Group Sold Products By The Date
+
+use test_db
+go
+Create table Activities (sell_date date, product varchar(20))
+go
+insert into Activities (sell_date, product) values ('2020-05-30', 'Headphone')
+insert into Activities (sell_date, product) values ('2020-06-01', 'Pencil')
+insert into Activities (sell_date, product) values ('2020-06-02', 'Mask')
+insert into Activities (sell_date, product) values ('2020-05-30', 'Basketball')
+insert into Activities (sell_date, product) values ('2020-06-01', 'Bible')
+insert into Activities (sell_date, product) values ('2020-06-02', 'Mask')
+insert into Activities (sell_date, product) values ('2020-05-30', 'T-Shirt')
+go
+
+use test_db
+go
+select sell_date, count(*) as num_sold, 
+	string_agg(product, ',') within group (order by product) as products
+from (
+	select distinct sell_date, product 
+	from Activities
+	) as distinct_Activities
+group by sell_date
+order by sell_date
+
+
+--leetcode 1517. Find Users With Valid E-Mails (not solved)
+
+use test_db
+go
+Create table Users (user_id int, name varchar(30), mail varchar(50))
+go
+insert into Users (user_id, name, mail) values ('1', 'Winston', 'winston@leetcode.com')
+insert into Users (user_id, name, mail) values ('2', 'Jonathan', 'jonathanisgreat')
+insert into Users (user_id, name, mail) values ('3', 'Annabelle', 'bella-@leetcode.com')
+insert into Users (user_id, name, mail) values ('4', 'Sally', 'sally.come@leetcode.com')
+insert into Users (user_id, name, mail) values ('5', 'Marwan', 'quarz#2020@leetcode.com')
+insert into Users (user_id, name, mail) values ('6', 'David', 'david69@gmail.com')
+insert into Users (user_id, name, mail) values ('7', 'Shapiro', '.shapo@leetcode.com')
+go
+
+use test_db
+go
+select *
+from Users
+where right(mail, 13)='@leetcode.com' 
+	and mail like '[A-Z]%' 
+	and left(mail, len(mail)-13) like '%[aA-zZ]%' 
+	and left(mail, len(mail)-13) not like '%#%'
