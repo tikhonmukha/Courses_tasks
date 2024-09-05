@@ -493,5 +493,51 @@ import pandas as pd
 data = [[1, 1, '2019-08-01', '2019-08-02'], [2, 2, '2019-08-02', '2019-08-02'], [3, 1, '2019-08-11', '2019-08-12'], [4, 3, '2019-08-24', '2019-08-24'], [5, 3, '2019-08-21', '2019-08-22'], [6, 2, '2019-08-11', '2019-08-13'], [7, 4, '2019-08-09', '2019-08-09']]
 delivery = pd.DataFrame(data, columns=['delivery_id', 'customer_id', 'order_date', 'customer_pref_delivery_date']).astype({'delivery_id':'Int64', 'customer_id':'Int64', 'order_date':'datetime64[ns]', 'customer_pref_delivery_date':'datetime64[ns]'})
 
-delivery['order_type'] = ['immediate' if delivery['order_date'][i]==delivery['customer_pref_delivery_date'][i] else 'scheduled' for i in range(0, len(delivery['order_date']))]
-delivery['order_rank'] = delivery[['customer_id','delivery_id']].apply(tuple,axis=1).rank(method='dense').astype(int)
+def immediate_food_delivery(delivery: pd.DataFrame) -> pd.DataFrame:
+    delivery['order_type'] = ['immediate' if delivery['order_date'][i]==delivery['customer_pref_delivery_date'][i] else 'scheduled' for i in range(0, len(delivery))]
+    first_orders = delivery.groupby('customer_id', as_index=False)['order_date'].min()
+    first_orders_full = delivery.merge(first_orders, how='inner', on=['customer_id','order_date'])
+    return pd.DataFrame({'immediate_percentage':[round(first_orders_full.query('order_type=="immediate"').shape[0] / first_orders_full.shape[0] * 100, 2)]})
+
+immediate_food_delivery(delivery)
+
+
+## leetcode 1179. Reformat Department Table
+
+import pandas as pd
+import numpy as np
+
+data = [[1, 8000, 'Jan'], [2, 9000, 'Jan'], [3, 10000, 'Feb'], [1, 7000, 'Feb'], [1, 6000, 'Mar']]
+department = pd.DataFrame(data, columns=['id', 'revenue', 'month']).astype({'id':'Int64', 'revenue':'Int64', 'month':'object'})
+
+data = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+months = pd.DataFrame(data, columns=['month']).astype({'month':'object'})
+dep_mon = months.merge(department['id'].drop_duplicates(), how='cross')
+department_allmonths = department.merge(dep_mon, how='right', on=['id','month'])
+department_allmonths['month_num'] = np.select([department_allmonths['month']=='Jan', 
+                                     department_allmonths['month']=='Feb', 
+                                     department_allmonths['month']=='Mar', 
+                                     department_allmonths['month']=='Apr', 
+                                     department_allmonths['month']=='May', 
+                                     department_allmonths['month']=='Jun', 
+                                     department_allmonths['month']=='Jul', 
+                                     department_allmonths['month']=='Aug', 
+                                     department_allmonths['month']=='Sep', 
+                                     department_allmonths['month']=='Oct', 
+                                     department_allmonths['month']=='Nov', 
+                                     department_allmonths['month']=='Dec'], 
+                                     [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12])
+department_allmonths.pivot_table(index='id', columns='month_num', values='revenue', aggfunc='sum').reset_index()\
+    .rename(columns={1:'Jan_Revenue', 
+                     2:'Feb_Revenue', 
+                     3:'Mar_Revenue', 
+                     4:'Apr_Revenue', 
+                     5:'May_Revenue', 
+                     6:'Jun_Revenue', 
+                     7:'Jul_Revenue', 
+                     8:'Aug_Revenue', 
+                     9:'Sep_Revenue', 
+                     10:'Oct_Revenue', 
+                     11:'Nov_Revenue', 
+                     12:'Dec_Revenue'})
+department_allmonths.groupby(['id','month_num'], as_index=False).sum()
