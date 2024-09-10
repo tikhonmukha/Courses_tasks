@@ -541,3 +541,41 @@ department_allmonths.pivot_table(index='id', columns='month_num', values='revenu
                      11:'Nov_Revenue', 
                      12:'Dec_Revenue'})
 department_allmonths.groupby(['id','month_num'], as_index=False).sum()
+
+
+## leetcode 1193. Monthly Transactions I
+
+import pandas as pd
+
+data = [[121, 'US', 'approved', 1000, '2018-12-18'], [122, 'US', 'declined', 2000, '2018-12-19'], [123, 'US', 'approved', 2000, '2019-01-01'], [124, 'DE', 'approved', 2000, '2019-01-07'], [123, None, 'approved', 2000, '2019-01-07']]
+transactions = pd.DataFrame(data, columns=['id', 'country', 'state', 'amount', 'trans_date']).astype({'id':'Int64', 'country':'object', 'state':'object', 'amount':'Int64', 'trans_date':'datetime64[ns]'})
+transactions['month'] = transactions['trans_date'].dt.strftime('%Y-%m')
+transactions = transactions.assign(state_bin=lambda df: df.state=='approved')
+transactions.groupby(['month', 'country'], as_index=False).agg({'state':'count', 'state_bin':'sum', 'amount':'sum'})
+
+def monthly_transactions(transactions: pd.DataFrame) -> pd.DataFrame:
+    transactions['month'] = transactions['trans_date'].dt.strftime('%Y-%m')
+    transactions['country'] = transactions['country'].fillna('None')
+    t_all = transactions.groupby(['month', 'country'], as_index=False).agg({'state':'count', 'amount':'sum'})
+    t_approved = transactions.query('state=="approved"').groupby(['month', 'country'], as_index=False).agg({'state':'count', 'amount':'sum'})
+    t_result = t_all.merge(t_approved, how='left', on=['month', 'country'])\
+        .rename(columns={'state_x':'trans_count', 'state_y':'approved_count', 'amount_x':'trans_total_amount', 'amount_y':'approved_total_amount'})\
+            .fillna(0)[['month','country','trans_count','approved_count','trans_total_amount','approved_total_amount']]
+    t_result.loc[t_result['country']=='None', 'country'] = None
+    return t_result
+
+monthly_transactions(transactions)
+
+
+## leetcode 1204. Last Person to Fit in the Bus
+
+import pandas as pd
+
+data = [[5, 'Alice', 250, 1], [4, 'Bob', 175, 5], [3, 'Alex', 350, 2], [6, 'John Cena', 400, 3], [1, 'Winston', 500, 6], [2, 'Marie', 200, 4]]
+queue = pd.DataFrame(data, columns=['person_id', 'person_name', 'weight', 'turn']).astype({'person_id':'Int64', 'person_name':'object', 'weight':'Int64', 'turn':'Int64'})
+
+def last_passenger(queue: pd.DataFrame) -> pd.DataFrame:
+    queue['weight_cumsum'] = queue.sort_values(by='turn')['weight'].cumsum()
+    return pd.DataFrame({'person_name':[queue.query('weight_cumsum<=1000').sort_values(by='weight_cumsum', ascending=False).iloc[0, :]['person_name']]})
+
+last_passenger(queue)
