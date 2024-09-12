@@ -579,3 +579,30 @@ def last_passenger(queue: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({'person_name':[queue.query('weight_cumsum<=1000').sort_values(by='weight_cumsum', ascending=False).iloc[0, :]['person_name']]})
 
 last_passenger(queue)
+
+
+## leetcode 1211. Queries Quality and Percentage
+
+import pandas as pd
+
+data = [['Dog', 'Golden Retriever', 1, 5], ['Dog', 'German Shepherd', 2, 5], ['Dog', 'Mule', 200, 1], ['Cat', 'Shirazi', 5, 2], ['Cat', 'Siamese', 3, 3], ['Cat', 'Sphynx', 7, 4]]
+queries = pd.DataFrame(data, columns=['query_name', 'result', 'position', 'rating']).astype({'query_name':'object', 'result':'object', 'position':'Int64', 'rating':'Int64'})
+
+round2 = lambda x: round(x + 1e-9, 2)
+
+def queries_stats(queries: pd.DataFrame) -> pd.DataFrame:
+    queries['quality'] = queries['rating'] / queries['position']
+    queries['poor_query_percentage'] = (queries['rating'] < 3) * 100
+    return queries.groupby('query_name')[['quality','poor_query_percentage']].mean().apply(round2).reset_index()
+
+queries_stats(queries)
+
+
+## leetcode 1251. Average Selling Price
+
+import pandas as pd
+
+data = [[1, '2019-02-17', '2019-02-28', 5], [1, '2019-03-01', '2019-03-22', 20], [2, '2019-02-01', '2019-02-20', 15], [2, '2019-02-21', '2019-03-31', 30]]
+prices = pd.DataFrame(data, columns=['product_id', 'start_date', 'end_date', 'price']).astype({'product_id':'Int64', 'start_date':'datetime64[ns]', 'end_date':'datetime64[ns]', 'price':'Int64'})
+data = [[1, '2019-02-25', 100], [1, '2019-03-01', 15], [2, '2019-02-10', 200], [2, '2019-03-22', 30]]
+units_sold = pd.DataFrame(data, columns=['product_id', 'purchase_date', 'units']).astype({'product_id':'Int64', 'purchase_date':'datetime64[ns]', 'units':'Int64'})
