@@ -602,7 +602,40 @@ queries_stats(queries)
 
 import pandas as pd
 
-data = [[1, '2019-02-17', '2019-02-28', 5], [1, '2019-03-01', '2019-03-22', 20], [2, '2019-02-01', '2019-02-20', 15], [2, '2019-02-21', '2019-03-31', 30]]
+data = [[1, '2019-02-17', '2019-02-28', 5], [1, '2019-03-01', '2019-03-22', 20], [2, '2019-02-01', '2019-02-20', 15], [2, '2019-02-21', '2019-03-31', 30], [3, '2019-02-21', '2019-03-31', 30]]
 prices = pd.DataFrame(data, columns=['product_id', 'start_date', 'end_date', 'price']).astype({'product_id':'Int64', 'start_date':'datetime64[ns]', 'end_date':'datetime64[ns]', 'price':'Int64'})
 data = [[1, '2019-02-25', 100], [1, '2019-03-01', 15], [2, '2019-02-10', 200], [2, '2019-03-22', 30]]
 units_sold = pd.DataFrame(data, columns=['product_id', 'purchase_date', 'units']).astype({'product_id':'Int64', 'purchase_date':'datetime64[ns]', 'units':'Int64'})
+
+def average_selling_price(prices: pd.DataFrame, units_sold: pd.DataFrame) -> pd.DataFrame:
+    units_prices = pd.merge(units_sold, prices, on='product_id', how='right')
+    units_prices = units_prices[(units_prices['purchase_date']>=units_prices['start_date']) & (units_prices['purchase_date']<=units_prices['end_date']) | (units_prices['purchase_date'].isnull())]
+    units_prices['total_amt'] = units_prices['units'] * units_prices['price']
+    units_prices_agg = units_prices.groupby('product_id', as_index=False).agg({'total_amt':'sum', 'units':'sum'})
+    units_prices_agg['average_price'] = round(units_prices_agg['total_amt'] / units_prices_agg['units'].replace(0, 1), 2)
+    return units_prices_agg[['product_id', 'average_price']]
+
+average_selling_price(prices, units_sold)
+
+
+## leetcode 1280. Students and Examinations
+
+import pandas as pd
+
+data = [[1, 'Alice'], [2, 'Bob'], [13, 'John'], [6, 'Alex']]
+students = pd.DataFrame(data, columns=['student_id', 'student_name']).astype({'student_id':'Int64', 'student_name':'object'})
+data = [['Math'], ['Physics'], ['Programming']]
+subjects = pd.DataFrame(data, columns=['subject_name']).astype({'subject_name':'object'})
+data = [[1, 'Math'], [1, 'Physics'], [1, 'Programming'], [2, 'Programming'], [1, 'Physics'], [1, 'Math'], [13, 'Math'], [13, 'Programming'], [13, 'Physics'], [2, 'Math'], [1, 'Math']]
+examinations = pd.DataFrame(data, columns=['student_id', 'subject_name']).astype({'student_id':'Int64', 'subject_name':'object'})
+
+def students_and_examinations(students: pd.DataFrame, subjects: pd.DataFrame, examinations: pd.DataFrame) -> pd.DataFrame:
+    exams = pd.merge(students, subjects, how='cross')\
+        .sort_values(by=['student_id', 'subject_name'])\
+            .merge(examinations.groupby(['student_id', 'subject_name'], as_index=False)\
+                .agg(attended_exams=('subject_name', 'count')), 
+                    on=['student_id', 'subject_name'], how='left')[['student_id', 'student_name', 'subject_name', 'attended_exams']]
+    exams['attended_exams'] = exams['attended_exams'].fillna(0)
+    return exams
+
+students_and_examinations(students, subjects, examinations)
