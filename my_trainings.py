@@ -639,3 +639,54 @@ def students_and_examinations(students: pd.DataFrame, subjects: pd.DataFrame, ex
     return exams
 
 students_and_examinations(students, subjects, examinations)
+
+
+## leetcode 1321. Restaurant Growth
+
+import pandas as pd
+
+data = [[1, 'Jhon', '2019-01-01', 100], [2, 'Daniel', '2019-01-02', 110], [3, 'Jade', '2019-01-03', 120], [4, 'Khaled', '2019-01-04', 130], [5, 'Winston', '2019-01-05', 110], [6, 'Elvis', '2019-01-06', 140], [7, 'Anna', '2019-01-07', 150], [8, 'Maria', '2019-01-08', 80], [9, 'Jaze', '2019-01-09', 110], [1, 'Jhon', '2019-01-10', 130], [3, 'Jade', '2019-01-10', 150]]
+customer = pd.DataFrame(data, columns=['customer_id', 'name', 'visited_on', 'amount']).astype({'customer_id':'Int64', 'name':'object', 'visited_on':'datetime64[ns]', 'amount':'Int64'})
+
+def restaurant_growth(customer: pd.DataFrame) -> pd.DataFrame:
+    running_total = customer.groupby('visited_on').agg({'amount':'sum'}).rolling(window=7).sum().reset_index().query('amount > 0')
+    running_avg = customer.groupby('visited_on').agg(average_amount=('amount','sum')).rolling(window=7).mean().reset_index().round(2).query('average_amount > 0')
+    return pd.merge(running_total, running_avg, how='inner', on='visited_on')
+
+restaurant_growth(customer)
+
+
+## leetcode 1327. List the Products Ordered in a Period
+
+import pandas as pd
+
+data = [[1, 'Leetcode Solutions', 'Book'], [2, 'Jewels of Stringology', 'Book'], [3, 'HP', 'Laptop'], [4, 'Lenovo', 'Laptop'], [5, 'Leetcode Kit', 'T-shirt']]
+products = pd.DataFrame(data, columns=['product_id', 'product_name', 'product_category']).astype({'product_id':'Int64', 'product_name':'object', 'product_category':'object'})
+data = [[1, '2020-02-05', 60], [1, '2020-02-10', 70], [2, '2020-01-18', 30], [2, '2020-02-11', 80], [3, '2020-02-17', 2], [3, '2020-02-24', 3], [4, '2020-03-01', 20], [4, '2020-03-04', 30], [4, '2020-03-04', 60], [5, '2020-02-25', 50], [5, '2020-02-27', 50], [5, '2020-03-01', 50]]
+orders = pd.DataFrame(data, columns=['product_id', 'order_date', 'unit']).astype({'product_id':'Int64', 'order_date':'datetime64[ns]', 'unit':'Int64'})
+
+def list_products(products: pd.DataFrame, orders: pd.DataFrame) -> pd.DataFrame:
+    orders['order_month'] = orders['order_date'].dt.strftime('%Y-%m')
+    return orders.merge(products, how='inner', on='product_id').query('order_month=="2020-02"').groupby('product_name', as_index=False).agg({'unit':'sum'}).query('unit>=100')
+
+list_products(products, orders)
+
+
+## leetcode 1341. Movie Rating
+
+import pandas as pd
+
+data = [[1, 'Avengers'], [2, 'Frozen 2'], [3, 'Joker']]
+movies = pd.DataFrame(data, columns=['movie_id', 'title']).astype({'movie_id':'Int64', 'title':'object'})
+data = [[1, 'Daniel'], [2, 'Monica'], [3, 'Maria'], [4, 'James']]
+users = pd.DataFrame(data, columns=['user_id', 'name']).astype({'user_id':'Int64', 'name':'object'})
+data = [[1, 1, 3, '2020-01-12'], [1, 2, 4, '2020-02-11'], [1, 3, 2, '2020-02-12'], [1, 4, 1, '2020-01-01'], [2, 1, 5, '2020-02-17'], [2, 2, 2, '2020-02-01'], [2, 3, 2, '2020-03-01'], [3, 1, 3, '2020-02-22'], [3, 2, 4, '2020-02-25']]
+movie_rating = pd.DataFrame(data, columns=['movie_id', 'user_id', 'rating', 'created_at']).astype({'movie_id':'Int64', 'user_id':'Int64', 'rating':'Int64', 'created_at':'datetime64[ns]'})
+
+def movie_rating(movies: pd.DataFrame, users: pd.DataFrame, movie_rating: pd.DataFrame) -> pd.DataFrame:
+    movie_rating['rating_month'] = movie_rating['created_at'].dt.strftime('%Y-%m')
+    most_rates = movie_rating.merge(users, how='inner', on='user_id').groupby('name', as_index=False).agg({'rating':'count'}).sort_values(by='rating', ascending=False).head(1)['name']
+    max_avg_rating = movie_rating.merge(movies, how='inner', on='movie_id').query('rating_month=="2020-02"').groupby('title', as_index=False).agg({'rating':'mean'}).sort_values(by='rating', ascending=False).head(1)['title']
+    return pd.DataFrame({'results':pd.concat([most_rates, max_avg_rating])})
+
+movie_rating(movies, users, movie_rating)
