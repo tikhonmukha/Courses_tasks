@@ -690,3 +690,65 @@ def movie_rating(movies: pd.DataFrame, users: pd.DataFrame, movie_rating: pd.Dat
     return pd.DataFrame({'results':pd.concat([most_rates, max_avg_rating])})
 
 movie_rating(movies, users, movie_rating)
+
+
+## leetcode 1378. Replace Employee ID With The Unique Identifier
+
+import pandas as pd
+
+data = [[1, 'Alice'], [7, 'Bob'], [11, 'Meir'], [90, 'Winston'], [3, 'Jonathan']]
+employees = pd.DataFrame(data, columns=['id', 'name']).astype({'id':'int64', 'name':'object'})
+data = [[3, 1], [11, 2], [90, 3]]
+employee_uni = pd.DataFrame(data, columns=['id', 'unique_id']).astype({'id':'int64', 'unique_id':'int64'})
+
+def replace_employee_id(employees: pd.DataFrame, employee_uni: pd.DataFrame) -> pd.DataFrame:
+    return employees.merge(employee_uni, how='left', on='id')[['unique_id', 'name']]
+
+replace_employee_id(employees, employee_uni)
+
+
+## leetcode 1393. Capital Gain/Loss
+
+import pandas as pd
+import numpy as np
+
+data = [['Leetcode', 'Buy', 1, 1000], ['Corona Masks', 'Buy', 2, 10], ['Leetcode', 'Sell', 5, 9000], ['Handbags', 'Buy', 17, 30000], ['Corona Masks', 'Sell', 3, 1010], ['Corona Masks', 'Buy', 4, 1000], ['Corona Masks', 'Sell', 5, 500], ['Corona Masks', 'Buy', 6, 1000], ['Handbags', 'Sell', 29, 7000], ['Corona Masks', 'Sell', 10, 10000]]
+stocks = pd.DataFrame(data, columns=['stock_name', 'operation', 'operation_day', 'price']).astype({'stock_name':'object', 'operation':'object', 'operation_day':'Int64', 'price':'Int64'})
+
+def capital_gainloss(stocks: pd.DataFrame) -> pd.DataFrame:
+    stocks['capital_gain_loss'] = np.where(stocks['operation']=='Buy', -stocks['price'], stocks['price'])
+    return stocks.groupby('stock_name', as_index=False).agg({'capital_gain_loss':'sum'})
+
+capital_gainloss(stocks)
+
+
+## leetcode 1407. Top Travellers
+
+import pandas as pd
+
+data = [[1, 'Alice'], [2, 'Bob'], [3, 'Alex'], [4, 'Donald'], [7, 'Lee'], [13, 'Jonathan'], [19, 'Elvis']]
+users = pd.DataFrame(data, columns=['id', 'name']).astype({'id':'Int64', 'name':'object'})
+data = [[1, 1, 120], [2, 2, 317], [3, 3, 222], [4, 7, 100], [5, 13, 312], [6, 19, 50], [7, 7, 120], [8, 19, 400], [9, 7, 230]]
+rides = pd.DataFrame(data, columns=['id', 'user_id', 'distance']).astype({'id':'Int64', 'user_id':'Int64', 'distance':'Int64'})
+
+def top_travellers(users: pd.DataFrame, rides: pd.DataFrame) -> pd.DataFrame:
+    return users\
+        .merge(rides, how='left', left_on='id', right_on='user_id')[['id_x', 'name', 'distance']]\
+            .groupby(['id_x', 'name'], as_index=False)\
+                .agg(travelled_distance = ('distance', 'sum'))\
+                    .sort_values(['travelled_distance', 'name'], ascending=[False, True])[['name', 'travelled_distance']]
+
+top_travellers(users, rides)
+
+
+## leetcode 1484. Group Sold Products By The Date
+
+import pandas as pd
+
+data = [['2020-05-30', 'Headphone'], ['2020-06-01', 'Pencil'], ['2020-06-02', 'Mask'], ['2020-05-30', 'Basketball'], ['2020-06-01', 'Bible'], ['2020-06-02', 'Mask'], ['2020-05-30', 'T-Shirt']]
+activities = pd.DataFrame(data, columns=['sell_date', 'product']).astype({'sell_date':'datetime64[ns]', 'product':'object'})
+
+def categorize_products(activities: pd.DataFrame) -> pd.DataFrame:
+    return activities.groupby('sell_date', as_index=False)['product'].agg([('num_sold', 'nunique'), ('products', lambda x: ','.join(sorted(x.unique())))])
+
+categorize_products(activities)
