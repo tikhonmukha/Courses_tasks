@@ -752,3 +752,46 @@ def categorize_products(activities: pd.DataFrame) -> pd.DataFrame:
     return activities.groupby('sell_date', as_index=False)['product'].agg([('num_sold', 'nunique'), ('products', lambda x: ','.join(sorted(x.unique())))])
 
 categorize_products(activities)
+
+
+## leetcode 1517. Find Users With Valid E-Mails
+
+import pandas as pd
+
+data = [[1, 'Winston', 'winston@leetcode.com'], [2, 'Jonathan', 'jonathanisgreat'], [3, 'Annabelle', 'bella-@leetcode.com'], [4, 'Sally', 'sally.come@leetcode.com'], [5, 'Marwan', 'quarz#2020@leetcode.com'], [6, 'David', 'david69@gmail.com'], [7, 'Shapiro', '.shapo@leetcode.com']]
+users = pd.DataFrame(data, columns=['user_id', 'name', 'mail']).astype({'user_id':'int64', 'name':'object', 'mail':'object'})
+
+def valid_emails(users: pd.DataFrame) -> pd.DataFrame:
+    return users[users['mail'].str.match(r'^[A-Za-z][A-Za-z0-9_\.\-]*@leetcode(\?com)?\.com$')]
+
+valid_emails(users)
+
+
+## leetcode 1527. Patients With a Condition
+
+import pandas as pd
+
+data = [[1, 'Daniel', 'YFEV COUGH'], [2, 'Alice', ''], [3, 'Bob', 'SADIAB100 MYOP'], [4, 'George', 'ACNE DIAB100'], [5, 'Alain', 'DIAB201']]
+patients = pd.DataFrame(data, columns=['patient_id', 'patient_name', 'conditions']).astype({'patient_id':'int64', 'patient_name':'object', 'conditions':'object'})
+
+def find_patients(patients: pd.DataFrame) -> pd.DataFrame:
+    return patients[patients.conditions.str.contains(r'\bDIAB1')]
+
+find_patients(patients)
+
+
+## leetcode 1581. Customer Who Visited but Did Not Make Any Transactions
+
+import pandas as pd
+
+data = [[1, 23], [2, 9], [4, 30], [5, 54], [6, 96], [7, 54], [8, 54]]
+visits = pd.DataFrame(data, columns=['visit_id', 'customer_id']).astype({'visit_id':'Int64', 'customer_id':'Int64'})
+data = [[2, 5, 310], [3, 5, 300], [9, 5, 200], [12, 1, 910], [13, 2, 970]]
+transactions = pd.DataFrame(data, columns=['transaction_id', 'visit_id', 'amount']).astype({'transaction_id':'Int64', 'visit_id':'Int64', 'amount':'Int64'})
+
+def find_customers(visits: pd.DataFrame, transactions: pd.DataFrame) -> pd.DataFrame:
+    return visits.merge(transactions, how='left', on='visit_id')\
+        .query('transaction_id.isna()').groupby('customer_id', as_index=False)\
+            .agg(count_no_trans=('visit_id', 'count'))
+
+find_customers(visits)
