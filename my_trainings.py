@@ -795,3 +795,94 @@ def find_customers(visits: pd.DataFrame, transactions: pd.DataFrame) -> pd.DataF
             .agg(count_no_trans=('visit_id', 'count'))
 
 find_customers(visits)
+
+
+## leetcode 1587. Bank Account Summary II
+
+import pandas as pd
+
+data = [[900001, 'Alice'], [900002, 'Bob'], [900003, 'Charlie']]
+users = pd.DataFrame(data, columns=['account', 'name']).astype({'account':'Int64', 'name':'object'})
+data = [[1, 900001, 7000, '2020-08-01'], [2, 900001, 7000, '2020-09-01'], [3, 900001, -3000, '2020-09-02'], [4, 900002, 1000, '2020-09-12'], [5, 900003, 6000, '2020-08-07'], [6, 900003, 6000, '2020-09-07'], [7, 900003, -4000, '2020-09-11']]
+transactions = pd.DataFrame(data, columns=['trans_id', 'account', 'amount', 'transacted_on']).astype({'trans_id':'Int64', 'account':'Int64', 'amount':'Int64', 'transacted_on':'datetime64[ns]'})
+
+def account_summary(users: pd.DataFrame, transactions: pd.DataFrame) -> pd.DataFrame:
+    return users.merge(transactions, how='left', on='account')\
+        .groupby('name', as_index=False).agg(balance=('amount','sum')).query('balance>10000')
+
+account_summary(users, transactions)
+
+
+## leetcode 1633. Percentage of Users Attended a Contest
+
+import pandas as pd
+
+data = [[6, None], [2, 'Bob'], [7, 'Alex']]
+users = pd.DataFrame(data, columns=['user_id', 'user_name']).astype({'user_id':'Int64', 'user_name':'object'})
+data = [[215, 6], [209, 2], [208, 2], [210, 6], [208, 6], [209, 7], [209, 6], [215, 7], [208, 7], [210, 2], [207, 2], [210, 7]]
+register = pd.DataFrame(data, columns=['contest_id', 'user_id']).astype({'contest_id':'Int64', 'user_id':'Int64'})
+
+def users_percentage(users: pd.DataFrame, register: pd.DataFrame) -> pd.DataFrame:
+    max_amt = users.merge(register, how='cross')[['user_id_x', 'contest_id']].drop_duplicates().groupby('contest_id', as_index=False).agg(tot_amt=('user_id_x', 'count'))
+    cur_amt = users.merge(register, how='left', on='user_id')[['user_id', 'contest_id']].groupby('contest_id', as_index=False).agg(cur_amt=('user_id', 'count'))
+    percentage_ds = cur_amt.merge(max_amt, how='right', on='contest_id')
+    percentage_ds['percentage'] = round(percentage_ds['cur_amt'] / percentage_ds['tot_amt'] * 100, 2)
+    return percentage_ds[['contest_id', 'percentage']].sort_values(by=['percentage', 'contest_id'], ascending=[False, True])
+
+users_percentage(users, register)
+
+
+## leetcode 1661. Average Time of Process per Machine
+
+import pandas as pd
+
+data = [[0, 0, 'start', 0.712], [0, 0, 'end', 1.52], [0, 1, 'start', 3.14], [0, 1, 'end', 4.12], [1, 0, 'start', 0.55], [1, 0, 'end', 1.55], [1, 1, 'start', 0.43], [1, 1, 'end', 1.42], [2, 0, 'start', 4.1], [2, 0, 'end', 4.512], [2, 1, 'start', 2.5], [2, 1, 'end', 5]]
+activity = pd.DataFrame(data, columns=['machine_id', 'process_id', 'activity_type', 'timestamp']).astype({'machine_id':'Int64', 'process_id':'Int64', 'activity_type':'object', 'timestamp':'Float64'})
+
+def get_average_time(activity: pd.DataFrame) -> pd.DataFrame:
+    activity_df_pvt = activity.pivot(index=['machine_id', 'process_id'], columns='activity_type', values='timestamp').reset_index()
+    activity_df_pvt['processing_time'] = activity_df_pvt['end']-activity_df_pvt['start']
+    return activity_df_pvt.groupby('machine_id', as_index=False).agg({'processing_time':'mean'}).round(3)
+
+get_average_time(activity)
+
+
+## leetcode 1667. Fix Names in a Table
+
+import pandas as pd
+
+data = [[1, 'aLice'], [2, 'bOB']]
+users = pd.DataFrame(data, columns=['user_id', 'name']).astype({'user_id':'Int64', 'name':'object'})
+
+def fix_names(users: pd.DataFrame) -> pd.DataFrame:
+    users['name'] = users['name'].str.capitalize()
+    return users.sort_values(by='user_id')
+
+fix_names(users)
+
+
+## leetcode 1683. Invalid Tweets
+
+import pandas as pd
+
+data = [[1, 'Let us Code'], [2, 'More than fifteen chars are here!']]
+tweets = pd.DataFrame(data, columns=['tweet_id', 'content']).astype({'tweet_id':'Int64', 'content':'object'})
+
+def invalid_tweets(tweets: pd.DataFrame) -> pd.DataFrame:
+    return pd.DataFrame({'tweet_id':tweets.query('content.str.len()>15')['tweet_id']})
+
+invalid_tweets(tweets)
+
+
+## leetcode 1693. Daily Leads and Partners
+
+import pandas as pd
+
+data = [['2020-12-8', 'toyota', 0, 1], ['2020-12-8', 'toyota', 1, 0], ['2020-12-8', 'toyota', 1, 2], ['2020-12-7', 'toyota', 0, 2], ['2020-12-7', 'toyota', 0, 1], ['2020-12-8', 'honda', 1, 2], ['2020-12-8', 'honda', 2, 1], ['2020-12-7', 'honda', 0, 1], ['2020-12-7', 'honda', 1, 2], ['2020-12-7', 'honda', 2, 1]]
+daily_sales = pd.DataFrame(data, columns=['date_id', 'make_name', 'lead_id', 'partner_id']).astype({'date_id':'datetime64[ns]', 'make_name':'object', 'lead_id':'Int64', 'partner_id':'Int64'})
+
+def daily_leads_and_partners(daily_sales: pd.DataFrame) -> pd.DataFrame:
+    return daily_sales.groupby(['date_id', 'make_name'], as_index=False)\
+        .agg(unique_leads=('lead_id', 'nunique'), unique_partners=('partner_id', 'nunique'))
+
+daily_leads_and_partners(daily_sales)
