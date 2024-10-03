@@ -886,3 +886,67 @@ def daily_leads_and_partners(daily_sales: pd.DataFrame) -> pd.DataFrame:
         .agg(unique_leads=('lead_id', 'nunique'), unique_partners=('partner_id', 'nunique'))
 
 daily_leads_and_partners(daily_sales)
+
+
+## leetcode 1729. Find Followers Count
+
+import pandas as pd
+
+data = [['0', '1'], ['1', '0'], ['2', '0'], ['2', '1']]
+followers = pd.DataFrame(data, columns=['user_id', 'follower_id']).astype({'user_id':'Int64', 'follower_id':'Int64'})
+
+def count_followers(followers: pd.DataFrame) -> pd.DataFrame:
+    return followers.groupby('user_id', as_index=False)\
+        .agg(followers_count=('follower_id', 'nunique')).sort_values(by='user_id')
+
+count_followers(followers)
+
+
+## leetcode 1731. The Number of Employees Which Report to Each Employee
+
+import pandas as pd
+import numpy as np
+
+data = [[9, 'Hercy', None, 43], [6, 'Alice', 9, 41], [4, 'Bob', 9, 36], [2, 'Winston', None, 37]]
+employees = pd.DataFrame(data, columns=['employee_id', 'name', 'reports_to', 'age']).astype({'employee_id':'Int64', 'name':'object', 'reports_to':'Int64', 'age':'Int64'})
+
+def custom_round(x):
+    return int(np.floor(x + 0.5))
+
+def count_employees(employees: pd.DataFrame) -> pd.DataFrame:
+    df = employees.merge(employees, how='inner', left_on='employee_id', right_on='reports_to')\
+    .groupby(['employee_id_x', 'name_x'], as_index=False)\
+        .agg(reports_count=('reports_to_y','count'), average_age=('age_y','mean'))\
+            .rename(columns={'employee_id_x':'employee_id', 'name_x':'name'}).sort_values(by='employee_id')
+    df['average_age'] = df['average_age'].apply(custom_round)
+    return df
+
+count_employees(employees)
+
+
+## leetcode 1741. Find Total Time Spent by Each Employee
+
+import pandas as pd
+
+data = [['1', '2020-11-28', '4', '32'], ['1', '2020-11-28', '55', '200'], ['1', '2020-12-3', '1', '42'], ['2', '2020-11-28', '3', '33'], ['2', '2020-12-9', '47', '74']]
+employees = pd.DataFrame(data, columns=['emp_id', 'event_day', 'in_time', 'out_time']).astype({'emp_id':'Int64', 'event_day':'datetime64[ns]', 'in_time':'Int64', 'out_time':'Int64'})
+
+def total_time(employees: pd.DataFrame) -> pd.DataFrame:
+    employees['time_diff'] = employees['out_time'] - employees['in_time']
+    return employees.groupby(['event_day', 'emp_id'], as_index=False).\
+        agg(total_time=('time_diff','sum')).rename(columns={'event_day':'day'})
+
+total_time(employees)
+
+
+## leetcode 1757. Recyclable and Low Fat Products
+
+import pandas as pd
+
+data = [['0', 'Y', 'N'], ['1', 'Y', 'Y'], ['2', 'N', 'Y'], ['3', 'Y', 'Y'], ['4', 'N', 'N']]
+products = pd.DataFrame(data, columns=['product_id', 'low_fats', 'recyclable']).astype({'product_id':'int64', 'low_fats':'category', 'recyclable':'category'})
+
+def find_products(products: pd.DataFrame) -> pd.DataFrame:
+    return pd.DataFrame({'product_id':products.query('low_fats=="Y" & recyclable=="Y"')['product_id']})
+
+find_products(products)
