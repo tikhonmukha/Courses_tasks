@@ -950,3 +950,58 @@ def find_products(products: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame({'product_id':products.query('low_fats=="Y" & recyclable=="Y"')['product_id']})
 
 find_products(products)
+
+
+## leetcode 1789. Primary Department for Each Employee
+
+import pandas as pd
+
+data = [['1', '1', 'N'], ['2', '1', 'Y'], ['2', '2', 'N'], ['3', '3', 'N'], ['4', '2', 'N'], ['4', '3', 'Y'], ['4', '4', 'N']]
+employee = pd.DataFrame(data, columns=['employee_id', 'department_id', 'primary_flag']).astype({'employee_id':'Int64', 'department_id':'Int64', 'primary_flag':'object'})
+
+def find_primary_department(employee: pd.DataFrame) -> pd.DataFrame:
+    employee_cnt = employee.groupby('employee_id', as_index=False).agg(emp_cnt = ('employee_id', 'count'))
+    return employee.merge(employee_cnt, how='left', on='employee_id')\
+        .query('emp_cnt==1 | primary_flag=="Y"')[['employee_id', 'department_id']]
+
+find_primary_department(employee)
+
+
+## leetcode 1795. Rearrange Products Table
+
+import pandas as pd
+
+data = [[0, 95, 100, 105], [1, 70, None, 80]]
+products = pd.DataFrame(data, columns=['product_id', 'store1', 'store2', 'store3']).astype({'product_id':'Int64', 'store1':'Int64', 'store2':'Int64', 'store3':'Int64'})
+
+def rearrange_products_table(products: pd.DataFrame) -> pd.DataFrame:
+    return products.melt(id_vars='product_id').rename(columns={'variable':'store', 'value':'price'}).dropna()
+
+rearrange_products_table(products)
+
+
+## leetcode 1873. Calculate Special Bonus
+
+import pandas as pd
+import numpy as np
+
+data = [[2, 'Meir', 3000], [3, 'Michael', 3800], [7, 'Addilyn', 7400], [8, 'Juan', 6100], [9, 'Kannon', 7700]]
+employees = pd.DataFrame(data, columns=['employee_id', 'name', 'salary']).astype({'employee_id':'int64', 'name':'object', 'salary':'int64'})
+
+def calculate_special_bonus(employees: pd.DataFrame) -> pd.DataFrame:
+    conditions = [(employees['employee_id'] % 2 != 0) & (employees['name'].str[0] != 'M')]
+    employees['bonus'] = np.select(conditions, [employees['salary']])
+    return employees[['employee_id', 'bonus']].sort_values(by='employee_id')
+
+calculate_special_bonus(employees)
+
+
+## leetcode 1890. The Latest Login in 2020
+
+import pandas as pd
+
+data = [[6, '2020-06-30 15:06:07'], [6, '2021-04-21 14:06:06'], [6, '2019-03-07 00:18:15'], [8, '2020-02-01 05:10:53'], [8, '2020-12-30 00:46:50'], [2, '2020-01-16 02:49:50'], [2, '2019-08-25 07:59:08'], [14, '2019-07-14 09:00:00'], [14, '2021-01-06 11:59:59']]
+logins = pd.DataFrame(data, columns=['user_id', 'time_stamp']).astype({'user_id':'Int64', 'time_stamp':'datetime64[ns]'})
+
+def latest_login(logins: pd.DataFrame) -> pd.DataFrame:
+    return logins.loc[logins.time_stamp.dt.year == 2020].groupby('user_id', as_index=False).agg(last_stamp = ('time_stamp', 'max'))
