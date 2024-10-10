@@ -1005,3 +1005,46 @@ logins = pd.DataFrame(data, columns=['user_id', 'time_stamp']).astype({'user_id'
 
 def latest_login(logins: pd.DataFrame) -> pd.DataFrame:
     return logins.loc[logins.time_stamp.dt.year == 2020].groupby('user_id', as_index=False).agg(last_stamp = ('time_stamp', 'max'))
+
+
+## leetcode 1907. Count Salary Categories
+
+import pandas as pd
+import numpy as np
+
+data = [[3, 108939], [2, 12747], [8, 87709], [6, 91796]]
+accounts = pd.DataFrame(data, columns=['account_id', 'income']).astype({'account_id':'Int64', 'income':'Int64'})
+
+def count_salary_categories(accounts: pd.DataFrame) -> pd.DataFrame:
+    accounts.astype({'income': int})
+    salary_cat_ds = pd.DataFrame(['Low Salary', 'Average Salary', 'High Salary'], columns=['category']).astype({'category':'object'})
+    conditions = [
+        (accounts['income'] < 20000),
+        (accounts['income'] >= 20000) & (accounts['income'] <= 50000),
+        (accounts['income'] > 50000)
+    ]
+    values = ['Low Salary', 'Average Salary', 'High Salary']
+    accounts['category'] = np.select(conditions, values, default='large')
+    return salary_cat_ds.merge(accounts, how='left', on='category').groupby('category', as_index=False).agg(accounts_count=('account_id','count'))
+
+count_salary_categories(accounts)
+
+
+## leetcode 1934. Confirmation Rate
+
+import pandas as pd
+import numpy as np
+
+data = [[3, '2020-03-21 10:16:13'], [7, '2020-01-04 13:57:59'], [2, '2020-07-29 23:09:44'], [6, '2020-12-09 10:39:37']]
+signups = pd.DataFrame(data, columns=['user_id', 'time_stamp']).astype({'user_id':'Int64', 'time_stamp':'datetime64[ns]'})
+data = [[3, '2021-01-06 03:30:46', 'timeout'], [3, '2021-07-14 14:00:00', 'timeout'], [7, '2021-06-12 11:57:29', 'confirmed'], [7, '2021-06-13 12:58:28', 'confirmed'], [7, '2021-06-14 13:59:27', 'confirmed'], [2, '2021-01-22 00:00:00', 'confirmed'], [2, '2021-02-28 23:59:59', 'timeout']]
+confirmations = pd.DataFrame(data, columns=['user_id', 'time_stamp', 'action']).astype({'user_id':'Int64', 'time_stamp':'datetime64[ns]', 'action':'object'})
+
+def confirmation_rate(signups: pd.DataFrame, confirmations: pd.DataFrame) -> pd.DataFrame:
+    confirmations['confirm'] = np.where(confirmations.action == 'confirmed', 1, 0)
+    conf_rate_ds = signups.merge(confirmations, how='left', on='user_id').groupby('user_id', as_index=False).agg(confirmed=('confirm','sum'), total=('confirm','count'))
+    conf_rate_ds['confirmation_rate'] = conf_rate_ds['confirmed'] / conf_rate_ds['total']
+    conf_rate_ds['confirmation_rate'] = conf_rate_ds['confirmation_rate'].fillna(0).round(2)
+    return conf_rate_ds[['user_id', 'confirmation_rate']]
+
+confirmation_rate(signups, confirmations)
