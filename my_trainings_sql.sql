@@ -1030,3 +1030,159 @@ where right(mail, 13)='@leetcode.com'
 	and mail like '[A-Z]%' 
 	and left(mail, len(mail)-13) like '%[aA-zZ]%' 
 	and left(mail, len(mail)-13) not like '%#%'
+
+
+-- leetcode 1527. Patients With a Condition
+
+use test_db
+go
+Create table Patients (patient_id int, patient_name varchar(30), conditions varchar(100))
+go
+insert into Patients (patient_id, patient_name, conditions) values ('1', 'Daniel', 'YFEV COUGH')
+insert into Patients (patient_id, patient_name, conditions) values ('2', 'Alice', '')
+insert into Patients (patient_id, patient_name, conditions) values ('3', 'Bob', 'DIAB100 MYOP')
+insert into Patients (patient_id, patient_name, conditions) values ('4', 'George', 'ACNE DIAB100')
+insert into Patients (patient_id, patient_name, conditions) values ('5', 'Alain', 'DIAB201')
+go
+
+use test_db
+go
+select *
+from Patients
+where conditions like 'DIAB1%' 
+    or conditions like '% DIAB1%'
+
+
+-- leetcode 1581. Customer Who Visited but Did Not Make Any Transactions
+
+use test_db
+go
+Create table Visits(visit_id int, customer_id int)
+Create table Transactions(transaction_id int, visit_id int, amount int)
+go
+insert into Visits (visit_id, customer_id) values ('1', '23')
+insert into Visits (visit_id, customer_id) values ('2', '9')
+insert into Visits (visit_id, customer_id) values ('4', '30')
+insert into Visits (visit_id, customer_id) values ('5', '54')
+insert into Visits (visit_id, customer_id) values ('6', '96')
+insert into Visits (visit_id, customer_id) values ('7', '54')
+insert into Visits (visit_id, customer_id) values ('8', '54')
+insert into Transactions (transaction_id, visit_id, amount) values ('2', '5', '310')
+insert into Transactions (transaction_id, visit_id, amount) values ('3', '5', '300')
+insert into Transactions (transaction_id, visit_id, amount) values ('9', '5', '200')
+insert into Transactions (transaction_id, visit_id, amount) values ('12', '1', '910')
+insert into Transactions (transaction_id, visit_id, amount) values ('13', '2', '970')
+go
+
+use test_db
+go
+select v.customer_id, count(v.visit_id) as count_no_trans
+from visits v 
+	left join transactions t on v.visit_id=t.visit_id
+where t.transaction_id is null
+group by v.customer_id
+
+
+-- leetcode 1587. Bank Account Summary II
+
+use test_db
+go
+Create table Users (account int, name varchar(20))
+Create table Transactions (trans_id int, account int, amount int, transacted_on date)
+go
+insert into Users (account, name) values ('900001', 'Alice')
+insert into Users (account, name) values ('900002', 'Bob')
+insert into Users (account, name) values ('900003', 'Charlie')
+insert into Transactions (trans_id, account, amount, transacted_on) values ('1', '900001', '7000', '2020-08-01')
+insert into Transactions (trans_id, account, amount, transacted_on) values ('2', '900001', '7000', '2020-09-01')
+insert into Transactions (trans_id, account, amount, transacted_on) values ('3', '900001', '-3000', '2020-09-02')
+insert into Transactions (trans_id, account, amount, transacted_on) values ('4', '900002', '1000', '2020-09-12')
+insert into Transactions (trans_id, account, amount, transacted_on) values ('5', '900003', '6000', '2020-08-07')
+insert into Transactions (trans_id, account, amount, transacted_on) values ('6', '900003', '6000', '2020-09-07')
+insert into Transactions (trans_id, account, amount, transacted_on) values ('7', '900003', '-4000', '2020-09-11')
+go
+
+use test_db
+go
+select u.name, sum(t.amount) as balance
+from Users u
+	left join Transactions t on u.account=t.account
+group by u.name
+having sum(t.amount)>10000
+
+
+-- leetcode 1633. Percentage of Users Attended a Contest
+
+use test_db
+go
+Create table Users (user_id int, user_name varchar(20))
+Create table Register (contest_id int, user_id int)
+go
+insert into Users (user_id, user_name) values ('6', 'Alice')
+insert into Users (user_id, user_name) values ('2', 'Bob')
+insert into Users (user_id, user_name) values ('7', 'Alex')
+insert into Register (contest_id, user_id) values ('215', '6')
+insert into Register (contest_id, user_id) values ('209', '2')
+insert into Register (contest_id, user_id) values ('208', '2')
+insert into Register (contest_id, user_id) values ('210', '6')
+insert into Register (contest_id, user_id) values ('208', '6')
+insert into Register (contest_id, user_id) values ('209', '7')
+insert into Register (contest_id, user_id) values ('209', '6')
+insert into Register (contest_id, user_id) values ('215', '7')
+insert into Register (contest_id, user_id) values ('208', '7')
+insert into Register (contest_id, user_id) values ('210', '2')
+insert into Register (contest_id, user_id) values ('207', '2')
+insert into Register (contest_id, user_id) values ('210', '7')
+go
+
+use test_db
+go
+with total_users as (
+	select count(distinct [user_id]) as amt
+	from Users
+),
+contest_users as (
+	select contest_id, count([user_id]) as tot_users
+	from Register
+	group by contest_id
+)
+select contest_id, round(tot_users/cast(amt as float)*100,2) as [percentage]
+from contest_users, total_users
+order by [percentage] desc, contest_id
+
+
+-- leetcode 1661. Average Time of Process per Machine
+
+use test_db
+go
+Create table Activity (machine_id int, process_id int, activity_type nchar(5), timestamp float)
+go
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('0', '0', 'start', '0.712')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('0', '0', 'end', '1.52')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('0', '1', 'start', '3.14')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('0', '1', 'end', '4.12')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('1', '0', 'start', '0.55')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('1', '0', 'end', '1.55')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('1', '1', 'start', '0.43')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('1', '1', 'end', '1.42')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('2', '0', 'start', '4.1')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('2', '0', 'end', '4.512')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('2', '1', 'start', '2.5')
+insert into Activity (machine_id, process_id, activity_type, timestamp) values ('2', '1', 'end', '5')
+go
+
+use test_db
+go
+with timestamp_pvt as (
+	select machine_id, process_id, [start], [end]
+	from (
+		select machine_id, process_id, activity_type, [timestamp]
+		from Activity
+	) as source_tbl
+	pivot (
+		sum([timestamp]) for activity_type in ([start], [end])
+	) as pvt_tbl
+)
+select machine_id, round(sum([end]-[start])/count(distinct process_id),3) as processing_time
+from timestamp_pvt
+group by machine_id 
