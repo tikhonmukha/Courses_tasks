@@ -1186,3 +1186,101 @@ with timestamp_pvt as (
 select machine_id, round(sum([end]-[start])/count(distinct process_id),3) as processing_time
 from timestamp_pvt
 group by machine_id 
+
+
+-- leetcode 1667. Fix Names in a Table
+
+use test_db
+go
+Create table Users (user_id int, name varchar(40))
+go
+insert into Users (user_id, name) values ('1', 'aLice')
+insert into Users (user_id, name) values ('2', 'bOB')
+go
+
+use test_db
+go
+select [user_id], UPPER(LEFT([name], 1)) + LOWER(SUBSTRING([name], 2, LEN([name]))) as [name]
+from Users
+order by [user_id]
+
+
+-- leetcode 1683. Invalid Tweets
+
+use test_db
+go
+Create table Tweets(tweet_id int, content varchar(50))
+go
+insert into Tweets (tweet_id, content) values ('1', 'Let us Code')
+insert into Tweets (tweet_id, content) values ('2', 'More than fifteen chars are here!')
+go
+
+use test_db
+go
+select tweet_id
+from Tweets
+where LEN(content) > 15
+
+
+-- leetcode 1693. Daily Leads and Partners
+
+use test_db
+go
+Create table DailySales(date_id date, make_name varchar(20), lead_id int, partner_id int)
+go
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'toyota', '0', '1')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'toyota', '1', '0')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'toyota', '1', '2')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'toyota', '0', '2')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'toyota', '0', '1')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'honda', '1', '2')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-8', 'honda', '2', '1')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '0', '1')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '1', '2')
+insert into DailySales (date_id, make_name, lead_id, partner_id) values ('2020-12-7', 'honda', '2', '1')
+go
+
+use test_db
+go
+select date_id, make_name, COUNT(DISTINCT lead_id) as unique_leads, COUNT(DISTINCT partner_id) as unique_partners
+from DailySales
+group by date_id, make_name
+
+
+-- leetcode 1729. Find Followers Count
+
+use test_db
+go
+Create table Followers(user_id int, follower_id int)
+go
+insert into Followers (user_id, follower_id) values ('0', '1')
+insert into Followers (user_id, follower_id) values ('1', '0')
+insert into Followers (user_id, follower_id) values ('2', '0')
+insert into Followers (user_id, follower_id) values ('2', '1')
+
+use test_db
+go
+select user_id, COUNT(follower_id) as followers_count
+from Followers
+group by user_id
+order by user_id
+
+
+-- leetcode 1731. The Number of Employees Which Report to Each Employee
+
+use test_db
+go
+Create table Employees(employee_id int, name varchar(20), reports_to int, age int)
+go
+insert into Employees (employee_id, name, reports_to, age) values ('9', 'Hercy', NULL, '43')
+insert into Employees (employee_id, name, reports_to, age) values ('6', 'Alice', '9', '41')
+insert into Employees (employee_id, name, reports_to, age) values ('4', 'Bob', '9', '36')
+insert into Employees (employee_id, name, reports_to, age) values ('2', 'Winston', NULL, '37')
+
+use test_db
+go
+select m.employee_id, m.name, COUNT(e.employee_id) as reports_count, ROUND(AVG(CAST(e.age AS FLOAT)),0) as average_age
+from Employees m
+	join Employees e on m.employee_id=e.reports_to
+group by m.employee_id, m.name
+order by m.employee_id
