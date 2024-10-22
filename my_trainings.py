@@ -1048,3 +1048,91 @@ def confirmation_rate(signups: pd.DataFrame, confirmations: pd.DataFrame) -> pd.
     return conf_rate_ds[['user_id', 'confirmation_rate']]
 
 confirmation_rate(signups, confirmations)
+
+
+## leetcode 1965. Employees With Missing Information
+
+import pandas as pd
+
+data = [[2, 'Crew'], [4, 'Haven'], [5, 'Kristian']]
+employees = pd.DataFrame(data, columns=['employee_id', 'name']).astype({'employee_id':'Int64', 'name':'object'})
+data = [[5, 76071], [1, 22517], [4, 63539]]
+salaries = pd.DataFrame(data, columns=['employee_id', 'salary']).astype({'employee_id':'Int64', 'salary':'Int64'})
+
+def find_employees(employees: pd.DataFrame, salaries: pd.DataFrame) -> pd.DataFrame:
+    return pd.DataFrame({'employee_id':list(employees\
+                                            .merge(salaries, how='outer', on='employee_id')\
+                                                .query('name.isna()==True | salary.isna()==True')\
+                                                    .sort_values(by='employee_id')['employee_id'])})
+
+find_employees(employees, salaries)
+
+
+## leetcode 1978. Employees Whose Manager Left the Company
+
+import pandas as pd
+
+data = [[3, 'Mila', 9, 60301], [12, 'Antonella', None, 31000], [13, 'Emery', None, 67084], [1, 'Kalel', 11, 21241], [9, 'Mikaela', None, 50937], [11, 'Joziah', 6, 28485]]
+employees = pd.DataFrame(data, columns=['employee_id', 'name', 'manager_id', 'salary']).astype({'employee_id':'Int64', 'name':'object', 'manager_id':'Int64', 'salary':'Int64'})
+
+def find_employees(employees: pd.DataFrame) -> pd.DataFrame:
+    return pd.DataFrame({'employee_id':list(employees\
+                                            .merge(employees, how='left', left_on='manager_id', right_on='employee_id')\
+                                                .query('manager_id_x.isna()==False & name_y.isna()==True & salary_x<30000')\
+                                                    .sort_values(by='employee_id_x')['employee_id_x'])})
+
+find_employees(employees)
+
+
+## leetcode 2356. Number of Unique Subjects Taught by Each Teacher
+
+import pandas as pd
+
+data = [[1, 2, 3], [1, 2, 4], [1, 3, 3], [2, 1, 1], [2, 2, 1], [2, 3, 1], [2, 4, 1]]
+teacher = pd.DataFrame(data, columns=['teacher_id', 'subject_id', 'dept_id']).astype({'teacher_id':'Int64', 'subject_id':'Int64', 'dept_id':'Int64'})
+
+def count_unique_subjects(teacher: pd.DataFrame) -> pd.DataFrame:
+    return teacher.groupby(by='teacher_id', as_index=False).agg(cnt=('subject_id', 'nunique'))
+
+count_unique_subjects(teacher)
+
+
+## leetcode 2877. Create a DataFrame from List
+
+import pandas as pd
+
+student_data = [
+  [1, 15],
+  [2, 11],
+  [3, 11],
+  [4, 20]
+]
+
+def createDataframe(student_data: List[List[int]]) -> pd.DataFrame:
+    return pd.DataFrame(student_data, columns=['student_id', 'age']).astype({'student_id':int, 'age':int})
+
+createDataframe(student_data)
+
+
+## leetcode 2878. Get the Size of a DataFrame
+
+import pandas as pd
+
+def getDataframeSize(players: pd.DataFrame) -> List[int]:
+    return list(players.shape)
+
+
+## leetcode 2879. Display the First Three Rows
+
+import pandas as pd
+
+def selectFirstRows(employees: pd.DataFrame) -> pd.DataFrame:
+    return employees.head(3)
+
+
+## leetcode 2880. Select Data
+
+import pandas as pd
+
+def selectData(students: pd.DataFrame) -> pd.DataFrame:
+    return students.query('student_id==101')[['name', 'age']]
