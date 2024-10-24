@@ -1136,3 +1136,113 @@ import pandas as pd
 
 def selectData(students: pd.DataFrame) -> pd.DataFrame:
     return students.query('student_id==101')[['name', 'age']]
+
+
+## leetcode 2881. Create a New Column
+
+import pandas as pd
+
+def createBonusColumn(employees: pd.DataFrame) -> pd.DataFrame:
+    employees['bonus'] = employees['salary'] * 2
+    return employees
+
+
+## leetcode 2882. Drop Duplicate Rows
+
+import pandas as pd
+
+def dropDuplicateEmails(customers: pd.DataFrame) -> pd.DataFrame:
+    return customers.drop_duplicates(subset=['email'], keep='first')
+
+
+## leetcode 2883. Drop Missing Data
+
+import pandas as pd
+
+def dropMissingData(students: pd.DataFrame) -> pd.DataFrame:
+    return students.query('name.isna()==False')
+
+
+## leetcode 2884. Modify Columns
+
+import pandas as pd
+
+def modifySalaryColumn(employees: pd.DataFrame) -> pd.DataFrame:
+    employees['salary'] = employees['salary'] * 2
+    return employees
+
+
+## leetcode 2885. Rename Columns
+
+import pandas as pd
+
+def renameColumns(students: pd.DataFrame) -> pd.DataFrame:
+    return students.rename(columns={'id':'student_id', 'first':'first_name', 'last':'last_name', 'age':'age_in_years'})
+
+
+## leetcode 2886. Change Data Type
+
+import pandas as pd
+
+def changeDatatype(students: pd.DataFrame) -> pd.DataFrame:
+    students['grade'] = students['grade'].astype(int)
+    return students
+
+
+## leetcode 2887. Fill Missing Data
+
+import pandas as pd
+
+def fillMissingValues(products: pd.DataFrame) -> pd.DataFrame:
+    products['quantity'] = products['quantity'].fillna(0)
+    return products
+
+
+## leetcode 2888. Reshape Data: Concatenate
+
+import pandas as pd
+
+def concatenateTables(df1: pd.DataFrame, df2: pd.DataFrame) -> pd.DataFrame:
+    return pd.concat([df1, df2])
+
+
+## leetcode 2889. Reshape Data: Pivot
+
+import pandas as pd
+
+def pivotTable(weather: pd.DataFrame) -> pd.DataFrame:
+    return weather.pivot(index='month', columns='city', values='temperature')
+
+
+## leetcode 2890. Reshape Data: Melt
+
+import pandas as pd
+
+def meltTable(report: pd.DataFrame) -> pd.DataFrame:
+    return report.melt(id_vars='product', value_vars=['quarter_1', 'quarter_2', 'quarter_3', 'quarter_4'], var_name='quarter', value_name='sales')
+
+
+## leetcode 2891. Method Chaining
+
+import pandas as pd
+
+def findHeavyAnimals(animals: pd.DataFrame) -> pd.DataFrame:
+    return pd.DataFrame({'name':list(animals.query('weight>100').sort_values(by='weight', ascending=False)['name'])})
+
+
+## leetcode 3220. Odd and Even Transactions
+
+import pandas as pd
+import numpy as np
+
+data = [[1, 150, '2024-07-01'], [2, 200, '2024-07-01'], [3, 75, '2024-07-01'], [4, 300, '2024-07-02'], [5, 50, '2024-07-02'], [6, 120, '2024-07-03']]
+transactions = pd.DataFrame(data, columns=['transaction_id', 'amount', 'transaction_date']).astype({'transaction_id':int, 'amount':int, 'transaction_date':'datetime64[ns]'})
+
+def sum_daily_odd_even(transactions: pd.DataFrame) -> pd.DataFrame:
+    transactions['transaction_type'] = np.where(transactions['amount'] % 2 == 0, 'even_sum', 'odd_sum')
+    return transactions\
+        .pivot_table(index='transaction_date', columns='transaction_type', values='amount', aggfunc='sum')\
+            .reset_index()\
+                .fillna(0)[['transaction_date', 'odd_sum', 'even_sum']]
+
+sum_daily_odd_even(transactions)
