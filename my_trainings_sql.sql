@@ -1257,6 +1257,7 @@ insert into Followers (user_id, follower_id) values ('0', '1')
 insert into Followers (user_id, follower_id) values ('1', '0')
 insert into Followers (user_id, follower_id) values ('2', '0')
 insert into Followers (user_id, follower_id) values ('2', '1')
+go
 
 use test_db
 go
@@ -1276,6 +1277,7 @@ insert into Employees (employee_id, name, reports_to, age) values ('9', 'Hercy',
 insert into Employees (employee_id, name, reports_to, age) values ('6', 'Alice', '9', '41')
 insert into Employees (employee_id, name, reports_to, age) values ('4', 'Bob', '9', '36')
 insert into Employees (employee_id, name, reports_to, age) values ('2', 'Winston', NULL, '37')
+go
 
 use test_db
 go
@@ -1284,3 +1286,143 @@ from Employees m
 	join Employees e on m.employee_id=e.reports_to
 group by m.employee_id, m.name
 order by m.employee_id
+
+
+-- leetcode 1741. Find Total Time Spent by Each Employee
+
+use test_db
+go
+Create table Employees(emp_id int, event_day date, in_time int, out_time int)
+go
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-11-28', '4', '32')
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-11-28', '55', '200')
+insert into Employees (emp_id, event_day, in_time, out_time) values ('1', '2020-12-3', '1', '42')
+insert into Employees (emp_id, event_day, in_time, out_time) values ('2', '2020-11-28', '3', '33')
+insert into Employees (emp_id, event_day, in_time, out_time) values ('2', '2020-12-9', '47', '74')
+go
+
+use test_db
+go
+select event_day as day, emp_id, SUM(out_time - in_time) as total_time
+from Employees
+group by event_day, emp_id
+
+
+-- leetcode 1757. Recyclable and Low Fat Products
+
+use test_db
+go
+Create table Products (product_id int, low_fats nchar(1), recyclable nchar(1))
+go
+insert into Products (product_id, low_fats, recyclable) values ('0', 'Y', 'N')
+insert into Products (product_id, low_fats, recyclable) values ('1', 'Y', 'Y')
+insert into Products (product_id, low_fats, recyclable) values ('2', 'N', 'Y')
+insert into Products (product_id, low_fats, recyclable) values ('3', 'Y', 'Y')
+insert into Products (product_id, low_fats, recyclable) values ('4', 'N', 'N')
+go
+
+use test_db
+go
+select product_id
+from Products
+where low_fats = 'Y'
+	and recyclable = 'Y'
+
+
+-- leetcode 1789. Primary Department for Each Employee
+
+use test_db
+go
+Create table Employee (employee_id int, department_id int, primary_flag nchar(1))
+go
+insert into Employee (employee_id, department_id, primary_flag) values ('1', '1', 'N')
+insert into Employee (employee_id, department_id, primary_flag) values ('2', '1', 'Y')
+insert into Employee (employee_id, department_id, primary_flag) values ('2', '2', 'N')
+insert into Employee (employee_id, department_id, primary_flag) values ('3', '3', 'N')
+insert into Employee (employee_id, department_id, primary_flag) values ('4', '2', 'N')
+insert into Employee (employee_id, department_id, primary_flag) values ('4', '3', 'Y')
+insert into Employee (employee_id, department_id, primary_flag) values ('4', '4', 'N')
+go
+
+use test_db
+go
+with employee_row_amt as (
+	select employee_id, count(employee_id) as row_amt
+	from Employee
+	group by employee_id
+)
+select e.employee_id, department_id
+from Employee e 
+	join employee_row_amt r on e.employee_id = r.employee_id
+where primary_flag = 'Y'
+	or row_amt = 1
+
+
+-- leetcode 1795. Rearrange Products Table
+
+use test_db
+go
+Create table Products (product_id int, store1 int, store2 int, store3 int)
+go
+insert into Products (product_id, store1, store2, store3) values ('0', '95', '100', '105')
+insert into Products (product_id, store1, store2, store3) values ('1', '70', NULL, '80')
+go
+
+use test_db
+go
+select product_id, store, price
+from (
+	select product_id, store1, store2, store3
+	from Products
+) p
+unpivot
+(
+	price for store in (store1, store2, store3)
+) as unpvt
+
+
+-- leetcode 1873. Calculate Special Bonus
+
+use test_db
+go
+Create table Employees (employee_id int, name varchar(30), salary int)
+go
+insert into Employees (employee_id, name, salary) values ('2', 'Meir', '3000')
+insert into Employees (employee_id, name, salary) values ('3', 'Michael', '3800')
+insert into Employees (employee_id, name, salary) values ('7', 'Addilyn', '7400')
+insert into Employees (employee_id, name, salary) values ('8', 'Juan', '6100')
+insert into Employees (employee_id, name, salary) values ('9', 'Kannon', '7700')
+go
+
+select employee_id,
+	case
+		when employee_id % 2 != 0 and name not like 'M%' then salary
+		else 0
+	end as bonus
+from Employees
+order by employee_id
+
+
+-- leetcode 1890. The Latest Login in 2020
+
+use test_db
+go
+Create table Logins (user_id int, time_stamp datetime)
+go
+insert into Logins (user_id, time_stamp) values ('6', '2020-06-30 15:06:07')
+insert into Logins (user_id, time_stamp) values ('6', '2021-04-21 14:06:06')
+insert into Logins (user_id, time_stamp) values ('6', '2019-03-07 00:18:15')
+insert into Logins (user_id, time_stamp) values ('8', '2020-02-01 05:10:53')
+insert into Logins (user_id, time_stamp) values ('8', '2020-12-30 00:46:50')
+insert into Logins (user_id, time_stamp) values ('2', '2020-01-16 02:49:50')
+insert into Logins (user_id, time_stamp) values ('2', '2019-08-25 07:59:08')
+insert into Logins (user_id, time_stamp) values ('14', '2019-07-14 09:00:00')
+insert into Logins (user_id, time_stamp) values ('14', '2021-01-06 11:59:59')
+go
+
+use test_db
+go
+select user_id, max(time_stamp) as last_stamp
+from Logins
+where year(time_stamp) = 2020
+group by user_id
