@@ -1246,3 +1246,54 @@ def sum_daily_odd_even(transactions: pd.DataFrame) -> pd.DataFrame:
                 .fillna(0)[['transaction_date', 'odd_sum', 'even_sum']]
 
 sum_daily_odd_even(transactions)
+
+
+## stratascratch Most Profitable Companies
+
+import pandas as pd
+
+forbes_global_2010_2014\
+    .groupby('company', as_index=False)\
+    .agg(profits=('profits','sum'))\
+    .sort_values(by='profits', ascending=False)\
+    .head(3)
+
+
+## stratascratch Workers With The Highest Salaries
+
+import pandas as pd
+
+max_salary = worker.salary.max()
+worker.merge(title, how='left', left_on='worker_id', right_on='worker_ref_id')\
+    .sort_values(by='salary', ascending=False)\
+    .drop_duplicates(subset=['worker_title'])\
+    .rename(columns={'worker_title':'best_paid_title'})[worker.salary == worker.salary.max()]['best_paid_title']
+
+
+## stratascratch Users By Average Session Time
+
+import pandas as pd
+
+facebook_web_log['date'] = pd.to_datetime(facebook_web_log['timestamp']).dt.date
+log_load = facebook_web_log.query("action=='page_load'")\
+    .groupby(['user_id','date'], as_index=False)\
+    .agg(load_max_ts=('timestamp','max'))
+log_exit = facebook_web_log.query("action=='page_exit'")\
+    .groupby(['user_id','date'], as_index=False)\
+    .agg(exit_min_ts=('timestamp','min'))
+log_actions = log_load.merge(log_exit, how='inner', on=['user_id','date'])
+log_actions['session_time'] = log_actions['exit_min_ts'] - log_actions['load_max_ts']
+log_actions.groupby('user_id', as_index=False)\
+    .agg(duration=('session_time','mean'))
+
+
+## stratascratch Activity Rank
+
+import pandas as pd
+
+google_gmail_emails = google_gmail_emails.groupby('from_user', as_index=False)\
+    .agg(total_emails=('id','count'))\
+    .sort_values(by=['total_emails','from_user'], ascending=[False,True])
+google_gmail_emails['rank'] = google_gmail_emails['total_emails']\
+    .rank(method='first', ascending=False)
+google_gmail_emails
