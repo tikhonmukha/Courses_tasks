@@ -136,6 +136,20 @@ def order_scores(scores: pd.DataFrame) -> pd.DataFrame:
 order_scores(scores)
 
 
+## leetcode 180. Consecutive Numbers
+
+import pandas as pd
+
+data = [[1, 1], [2, 1], [3, 1], [4, 2], [5, 1], [6, 2], [7, 2]]
+logs = pd.DataFrame(data, columns=['id', 'num']).astype({'id':'Int64', 'num':'Int64'})
+def consecutive_numbers(logs: pd.DataFrame) -> pd.DataFrame:
+    logs_2 = logs.shift(-1).rename(columns={'id':'id_2', 'num':'num_2'})
+    logs_3 = logs.shift(-2).rename(columns={'id':'id_3', 'num':'num_3'})
+    cons_nums = pd.concat([logs, logs_2, logs_3], axis=1).query('id==id_2-1 & id_2==id_3-1 & num==num_2 & num_2==num_3').num.unique()
+    return pd.DataFrame({'ConsecutiveNums':list(cons_nums)})
+consecutive_numbers(logs)
+
+
 ## leetcode 181. Employees Earning More Than Their Managers
 
 import pandas as pd
@@ -166,6 +180,21 @@ def top_three_salaries(employee: pd.DataFrame, department: pd.DataFrame) -> pd.D
 top_three_salaries(employee, department)
 
 
+## leetcode 262. Trips and Users
+
+import pandas as pd
+
+data = [['1', '1', '10', '1', 'completed', '2013-10-01'], ['2', '2', '11', '1', 'cancelled_by_driver', '2013-10-01'], ['3', '3', '12', '6', 'completed', '2013-10-01'], ['4', '4', '13', '6', 'cancelled_by_client', '2013-10-01'], ['5', '1', '10', '1', 'completed', '2013-10-02'], ['6', '2', '11', '6', 'completed', '2013-10-02'], ['7', '3', '12', '6', 'completed', '2013-10-02'], ['8', '2', '12', '12', 'completed', '2013-10-03'], ['9', '3', '10', '12', 'completed', '2013-10-03'], ['10', '4', '13', '12', 'cancelled_by_driver', '2013-10-03']]
+trips = pd.DataFrame(data, columns=['id', 'client_id', 'driver_id', 'city_id', 'status', 'request_at']).astype({'id':'Int64', 'client_id':'Int64', 'driver_id':'Int64', 'city_id':'Int64', 'status':'object', 'request_at':'object'})
+data = [['1', 'No', 'client'], ['2', 'Yes', 'client'], ['3', 'No', 'client'], ['4', 'No', 'client'], ['10', 'No', 'driver'], ['11', 'No', 'driver'], ['12', 'No', 'driver'], ['13', 'No', 'driver']]
+users = pd.DataFrame(data, columns=['users_id', 'banned', 'role']).astype({'users_id':'Int64', 'banned':'object', 'role':'object'})
+
+dim_drivers = users.query('role=="driver"')
+dim_users = users.query('role=="client"')
+users_trips_info = trips.merge(dim_users, how='inner', left_on='client_id', right_on='users_id')
+drivers_trips_info = trips.merge(dim_drivers, how='inner', left_on='driver_id', right_on='users_id')
+
+
 ## leetcode 550. Game Play Analysis IV
 
 import pandas as pd
@@ -174,8 +203,10 @@ data = [[1, 2, '2016-03-01', 5], [1, 2, '2016-03-02', 6], [2, 3, '2017-06-25', 1
 activity = pd.DataFrame(data, columns=['player_id', 'device_id', 'event_date', 'games_played']).astype({'player_id':'Int64', 'device_id':'Int64', 'event_date':'datetime64[ns]', 'games_played':'Int64'})
 
 def gameplay_analysis(activity: pd.DataFrame) -> pd.DataFrame:
+    first_event_date = activity.groupby('player_id', as_index=False).agg({'event_date':'min'}).rename(columns={'event_date':'first_event_date'})
     tot_players = activity.player_id.nunique()
-    returned_players = activity.query('games_played>0').groupby('player_id', as_index=False).agg({'games_played':'count'}).query('games_played>1').player_id.nunique()
+    activity['day_before_event'] = activity['event_date'] - pd.to_timedelta(1, 'D')
+    returned_players = activity.merge(first_event_date, how='inner', on='player_id').query('day_before_event==first_event_date & games_played>0').player_id.nunique()
     fraction = round(returned_players/tot_players, 2)
     return pd.DataFrame({'fraction':[fraction]})
 
